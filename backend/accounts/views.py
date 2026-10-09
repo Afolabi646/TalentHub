@@ -1,7 +1,12 @@
-from django.shortcuts import render
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
-from .serializers import RegisterSerializer, UserSerializer
+
+from .models import ApplicantProfile
+from .serializers import (
+    RegisterSerializer,
+    UserSerializer,
+    ApplicantProfileSerializer,
+)
 
 
 class RegisterView(generics.CreateAPIView):
@@ -15,4 +20,13 @@ class MeView(generics.RetrieveAPIView):
     def get_object(self):
         return self.request.user
 
-# Create your views here.
+
+class ApplicantProfileView(generics.RetrieveUpdateAPIView):
+    serializer_class = ApplicantProfileSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        profile, created = ApplicantProfile.objects.get_or_create(
+            user=self.request.user
+        )
+        return profile
