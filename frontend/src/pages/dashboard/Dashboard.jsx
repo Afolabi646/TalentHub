@@ -1,9 +1,11 @@
 import { useState } from "react";
 import ApplicantProfile from "../../components/applicant/ApplicantProfile";
+import Opportunities from "../Opportunities";
 
 export default function Dashboard({ user, onLogout }) {
   const isEmployer = user?.role === "EMPLOYER";
   const [showProfile, setShowProfile] = useState(false);
+  const [showOpportunities, setShowOpportunities] = useState(false);
 
   return (
     <main className="min-h-screen bg-slate-100">
@@ -26,7 +28,19 @@ export default function Dashboard({ user, onLogout }) {
       </nav>
 
       <section className="mx-auto max-w-6xl px-6 py-10">
-        {!isEmployer && showProfile ? (
+        {!isEmployer && showOpportunities ? (
+          <div className="rounded-xl bg-white p-6 shadow-sm">
+            <button
+              type="button"
+              onClick={() => setShowOpportunities(false)}
+              className="mb-5 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+            >
+              ← Back to Dashboard
+            </button>
+
+            <Opportunities />
+          </div>
+        ) : !isEmployer && showProfile ? (
           <div className="rounded-xl bg-white p-6 shadow-sm">
             <button
               type="button"
@@ -88,6 +102,7 @@ export default function Dashboard({ user, onLogout }) {
                     </p>
                     <button
                       type="button"
+                      onClick={() => setShowOpportunities(true)}
                       className="mt-5 rounded-lg bg-blue-600 px-5 py-3 font-medium text-white hover:bg-blue-700"
                     >
                       Browse Opportunities
