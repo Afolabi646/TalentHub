@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 
 
@@ -24,5 +25,27 @@ class Opportunity(models.Model):
 
     def __str__(self):
         return self.title
+
+
+
+
+class SavedOpportunity(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="saved_opportunities"
+    )
+    opportunity = models.ForeignKey(
+        "opportunities.Opportunity",
+        on_delete=models.CASCADE,
+        related_name="saved_by_users"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("user", "opportunity")
+
+    def __str__(self):
+        return f"{self.user} saved {self.opportunity.title}"
 
 # Create your models here.
