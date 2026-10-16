@@ -1,5 +1,7 @@
 from rest_framework import serializers
-from .models import Opportunity
+from .models import Opportunity, SavedOpportunity
+
+
 class OpportunitySerializer(serializers.ModelSerializer):
     class Meta:
         model = Opportunity
@@ -17,3 +19,10 @@ class OpportunitySerializer(serializers.ModelSerializer):
             "is_active",
             "created_at",
         ]
+
+class SavedOpportunitySerializer(serializers.ModelSerializer):
+    opportunity = OpportunitySerializer(read_only=True)
+
+    class Meta:
+        model = SavedOpportunity
+        fields = ["id", "opportunity", "created_at"]

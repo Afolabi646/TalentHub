@@ -10,6 +10,8 @@ function Opportunities() {
   const [currentPage, setCurrentPage] = useState(1);
   const [nextPageUrl, setNextPageUrl] = useState(null);
   const [previousPageUrl, setPreviousPageUrl] = useState(null);
+  const [savedIds, setSavedIds] = useState([]);
+  const [savingId, setSavingId] = useState(null);
 
   useEffect(() => {
    fetch(`http://127.0.0.1:8000/api/opportunities/?page=${currentPage}`)
@@ -31,6 +33,48 @@ function Opportunities() {
        setLoading(false);
      });
   }, [ currentPage ]);
+
+  const handleSaveOpportunity = async (opportunityId) => {
+    const accessToken = localStorage.getItem("accessToken");
+
+    if (!accessToken) {
+      alert("Please log in to save opportunities.");
+      return;
+    }
+
+    setSavingId(opportunityId);
+
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:8000/api/opportunities/save/${opportunityId}/`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.detail || data.error || "Could not save opportunity.",
+        );
+      }
+
+      setSavedIds((ids) =>
+        ids.includes(opportunityId) ? ids : [...ids, opportunityId],
+      );
+
+      alert(data.message);
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      setSavingId(null);
+    }
+  };
 
   const buttonStyle =
     "inline-flex items-center justify-center rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2";
@@ -328,13 +372,31 @@ function Opportunities() {
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => setSelectedOpportunity(opportunity)}
-                  className={`${buttonStyle} mt-6 w-full`}
-                >
-                  View Details <span className="ml-2">→</span>
-                </button>
+                <div className="mt-6 flex flex-col gap-3">
+                  <button
+                    type="button"
+                    onClick={() => handleSaveOpportunity(opportunity.id)}
+                    disabled={
+                      savingId === opportunity.id ||
+                      savedIds.includes(opportunity.id)
+                    }
+                    className="w-full rounded-xl border border-blue-600 px-5 py-3 text-sm font-semibold text-blue-700 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {savedIds.includes(opportunity.id)
+                      ? "✓ Saved"
+                      : savingId === opportunity.id
+                        ? "Saving..."
+                        : "♡ Save Opportunity"}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setSelectedOpportunity(opportunity)}
+                    className={`${buttonStyle} w-full`}
+                  >
+                    View Details <span className="ml-2">→</span>
+                  </button>
+                </div>
               </article>
             ))}
           </div>

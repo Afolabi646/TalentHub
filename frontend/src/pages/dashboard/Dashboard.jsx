@@ -4,8 +4,13 @@ import Opportunities from "../Opportunities";
 
 export default function Dashboard({ user, onLogout }) {
   const isEmployer = user?.role === "EMPLOYER";
-  const [showProfile, setShowProfile] = useState(false);
-  const [showOpportunities, setShowOpportunities] = useState(false);
+  const [showProfile, setShowProfile] = useState(
+    sessionStorage.getItem("dashboardPage") === "profile",
+  );
+
+  const [showOpportunities, setShowOpportunities] = useState(
+    sessionStorage.getItem("dashboardPage") === "opportunities",
+  );
 
   return (
     <main className="min-h-screen bg-slate-100">
@@ -32,7 +37,10 @@ export default function Dashboard({ user, onLogout }) {
           <div className="rounded-xl bg-white p-6 shadow-sm">
             <button
               type="button"
-              onClick={() => setShowOpportunities(false)}
+              onClick={() => {
+                sessionStorage.setItem("dashboardPage", "dashboard");
+                setShowOpportunities(false);
+              }}
               className="mb-5 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
             >
               ← Back to Dashboard
@@ -44,7 +52,10 @@ export default function Dashboard({ user, onLogout }) {
           <div className="rounded-xl bg-white p-6 shadow-sm">
             <button
               type="button"
-              onClick={() => setShowProfile(false)}
+              onClick={() => {
+                sessionStorage.setItem("dashboardPage", "dashboard");
+                setShowProfile(false);
+              }}
               className="mb-5 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
             >
               ← Back to Dashboard
@@ -102,7 +113,14 @@ export default function Dashboard({ user, onLogout }) {
                     </p>
                     <button
                       type="button"
-                      onClick={() => setShowOpportunities(true)}
+                      onClick={() => {
+                        sessionStorage.setItem(
+                          "dashboardPage",
+                          "opportunities",
+                        );
+                        setShowProfile(false);
+                        setShowOpportunities(true);
+                      }}
                       className="mt-5 rounded-lg bg-blue-600 px-5 py-3 font-medium text-white hover:bg-blue-700"
                     >
                       Browse Opportunities
@@ -110,7 +128,11 @@ export default function Dashboard({ user, onLogout }) {
 
                     <button
                       type="button"
-                      onClick={() => setShowProfile(true)}
+                      onClick={() => {
+                        sessionStorage.setItem("dashboardPage", "profile");
+                        setShowOpportunities(false);
+                        setShowProfile(true);
+                      }}
                       className="mt-3 rounded-lg border border-blue-600 px-5 py-3 font-medium text-blue-600 hover:bg-blue-50"
                     >
                       Edit Applicant Profile
