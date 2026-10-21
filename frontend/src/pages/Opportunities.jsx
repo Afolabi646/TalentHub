@@ -34,6 +34,38 @@ function Opportunities() {
      });
   }, [ currentPage ]);
 
+  useEffect(() => {
+    const fetchSavedOpportunities = async () => {
+      const token = localStorage.getItem("accessToken");
+
+      if (!token) return;
+
+      try {
+        const response = await fetch(
+          "http://127.0.0.1:8000/api/opportunities/saved/",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to load saved opportunities.");
+        }
+
+        const data = await response.json();
+        const savedOpportunities = data.results ?? data;
+
+        setSavedIds(savedOpportunities.map((item) => item.opportunity.id));
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchSavedOpportunities();
+  }, []);
+
   const handleSaveOpportunity = async (opportunityId) => {
     const accessToken = localStorage.getItem("accessToken");
 

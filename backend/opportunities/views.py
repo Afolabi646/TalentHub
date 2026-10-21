@@ -1,4 +1,4 @@
-from rest_framework import generics
+from rest_framework import generics, permissions
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
@@ -15,6 +15,19 @@ class OpportunityListView(generics.ListAPIView):
         return Opportunity.objects.filter(
             is_active=True
         ).order_by("-created_at")
+
+class CreateOpportunityView(generics.CreateAPIView):
+    serializer_class = OpportunitySerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        if self.request.user.role != "EMPLOYER":
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied(
+                "Only employers can create opportunities."
+            )
+
+        serializer.save()
 
 
 class SavedOpportunityListView(generics.ListAPIView):

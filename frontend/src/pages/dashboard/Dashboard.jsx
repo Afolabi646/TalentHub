@@ -1,6 +1,8 @@
 import { useState } from "react";
 import ApplicantProfile from "../../components/applicant/ApplicantProfile";
+import CreateOpportunity from "../CreateOpportunity";
 import Opportunities from "../Opportunities";
+import SavedOpportunities from "../SavedOpportunities";
 
 export default function Dashboard({ user, onLogout }) {
   const isEmployer = user?.role === "EMPLOYER";
@@ -10,6 +12,14 @@ export default function Dashboard({ user, onLogout }) {
 
   const [showOpportunities, setShowOpportunities] = useState(
     sessionStorage.getItem("dashboardPage") === "opportunities",
+  );
+
+  const [showSavedOpportunities, setShowSavedOpportunities] = useState(
+    sessionStorage.getItem("dashboardPage") === "savedOpportunities",
+  );
+
+  const [showCreateOpportunity, setShowCreateOpportunity] = useState(
+    sessionStorage.getItem("dashboardPage") === "createOpportunity",
   );
 
   return (
@@ -33,7 +43,32 @@ export default function Dashboard({ user, onLogout }) {
       </nav>
 
       <section className="mx-auto max-w-6xl px-6 py-10">
-        {!isEmployer && showOpportunities ? (
+        {isEmployer && showCreateOpportunity ? (
+          <div className="rounded-xl bg-white p-6 shadow-sm">
+            <CreateOpportunity
+              onBack={() => {
+                sessionStorage.setItem("dashboardPage", "dashboard");
+                setShowCreateOpportunity(false);
+              }}
+              onCreated={() => {}}
+            />
+          </div>
+        ) : !isEmployer && showSavedOpportunities ? (
+          <div className="rounded-xl bg-white p-6 shadow-sm">
+            <button
+              type="button"
+              onClick={() => {
+                sessionStorage.setItem("dashboardPage", "dashboard");
+                setShowSavedOpportunities(false);
+              }}
+              className="mb-5 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+            >
+              ← Back to Dashboard
+            </button>
+
+            <SavedOpportunities />
+          </div>
+        ) : !isEmployer && showOpportunities ? (
           <div className="rounded-xl bg-white p-6 shadow-sm">
             <button
               type="button"
@@ -87,6 +122,13 @@ export default function Dashboard({ user, onLogout }) {
                     </p>
                     <button
                       type="button"
+                      onClick={() => {
+                        sessionStorage.setItem(
+                          "dashboardPage",
+                          "createOpportunity",
+                        );
+                        setShowCreateOpportunity(true);
+                      }}
                       className="mt-5 rounded-lg bg-blue-600 px-5 py-3 font-medium text-white hover:bg-blue-700"
                     >
                       Create Opportunity
@@ -124,6 +166,22 @@ export default function Dashboard({ user, onLogout }) {
                       className="mt-5 rounded-lg bg-blue-600 px-5 py-3 font-medium text-white hover:bg-blue-700"
                     >
                       Browse Opportunities
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        sessionStorage.setItem(
+                          "dashboardPage",
+                          "savedOpportunities",
+                        );
+                        setShowOpportunities(false);
+                        setShowProfile(false);
+                        setShowSavedOpportunities(true);
+                      }}
+                      className="mt-3 rounded-lg border border-blue-600 px-5 py-3 font-medium text-blue-600 hover:bg-blue-50"
+                    >
+                      Saved Opportunities
                     </button>
 
                     <button
