@@ -3,11 +3,16 @@ import ApplicantProfile from "../../components/applicant/ApplicantProfile";
 import CreateOpportunity from "../CreateOpportunity";
 import Opportunities from "../Opportunities";
 import SavedOpportunities from "../SavedOpportunities";
+import MyOpportunities from "../MyOpportunities";
 
 export default function Dashboard({ user, onLogout }) {
   const isEmployer = user?.role === "EMPLOYER";
   const [showProfile, setShowProfile] = useState(
     sessionStorage.getItem("dashboardPage") === "profile",
+  );
+
+  const [showMyOpportunities, setShowMyOpportunities] = useState(
+    sessionStorage.getItem("dashboardPage") === "myOpportunities",
   );
 
   const [showOpportunities, setShowOpportunities] = useState(
@@ -43,7 +48,22 @@ export default function Dashboard({ user, onLogout }) {
       </nav>
 
       <section className="mx-auto max-w-6xl px-6 py-10">
-        {isEmployer && showCreateOpportunity ? (
+        {isEmployer && showMyOpportunities ? (
+          <div className="rounded-xl bg-white p-6 shadow-sm">
+            <button
+              type="button"
+              onClick={() => {
+                sessionStorage.setItem("dashboardPage", "dashboard");
+                setShowMyOpportunities(false);
+              }}
+              className="mb-5 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+            >
+              ← Back to Dashboard
+            </button>
+
+            <MyOpportunities />
+          </div>
+        ) : isEmployer && showCreateOpportunity ? (
           <div className="rounded-xl bg-white p-6 shadow-sm">
             <CreateOpportunity
               onBack={() => {
@@ -142,6 +162,31 @@ export default function Dashboard({ user, onLogout }) {
                     <p className="mt-2 text-slate-600">
                       Review people interested in your opportunities.
                     </p>
+                  </div>
+
+                  <div className="rounded-xl bg-white p-6 shadow-sm">
+                    <h3 className="text-lg font-semibold text-slate-800">
+                      My Opportunities
+                    </h3>
+
+                    <p className="mt-2 text-slate-600">
+                      View and manage the jobs and internships you have posted.
+                    </p>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        sessionStorage.setItem(
+                          "dashboardPage",
+                          "myOpportunities",
+                        );
+                        setShowCreateOpportunity(false);
+                        setShowMyOpportunities(true);
+                      }}
+                      className="mt-5 rounded-lg bg-blue-600 px-5 py-3 font-medium text-white hover:bg-blue-700"
+                    >
+                      View My Opportunities
+                    </button>
                   </div>
                 </>
               ) : (

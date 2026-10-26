@@ -16,6 +16,22 @@ class OpportunityListView(generics.ListAPIView):
             is_active=True
         ).order_by("-created_at")
 
+
+class MyOpportunitiesView(generics.ListAPIView):
+    serializer_class = OpportunitySerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        if self.request.user.role != "EMPLOYER":
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied(
+                "Only employers can view their own opportunities."
+            )
+
+        return Opportunity.objects.filter(
+            employer=self.request.user
+        ).order_by("-created_at")
+
 class CreateOpportunityView(generics.CreateAPIView):
     serializer_class = OpportunitySerializer
     permission_classes = [IsAuthenticated]
@@ -27,7 +43,7 @@ class CreateOpportunityView(generics.CreateAPIView):
                 "Only employers can create opportunities."
             )
 
-        serializer.save()
+        serializer.save(employer=self.request.user)
 
 
 class SavedOpportunityListView(generics.ListAPIView):
@@ -91,4 +107,77 @@ class RemoveSavedOpportunityView(APIView):
         return Response(
             {"message": "Opportunity removed from saved opportunities."},
             status=status.HTTP_200_OK
+        )
+
+
+class UpdateOpportunityView(generics.UpdateAPIView):
+    serializer_class = OpportunitySerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        if self.request.user.role != "EMPLOYER":
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied(
+                "Only employers can edit opportunities."
+            )
+
+        return Opportunity.objects.filter(
+            employer=self.request.user
+        )
+
+
+class DeactivateOpportunityView(generics.UpdateAPIView):
+    serializer_class = OpportunitySerializer
+    permission_classes = [IsAuthenticated]
+    http_method_names = ["patch", "options", "head"]
+
+    def get_queryset(self):
+        if self.request.user.role != "EMPLOYER":
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied(
+                "Only employers can deactivate opportunities."
+            )
+
+        return Opportunity.objects.filter(
+            employer=self.request.user
+        )
+
+    def perform_update(self, serializer):
+        serializer.save(is_active=False)
+
+
+class ReactivateOpportunityView(generics.UpdateAPIView):
+    serializer_class = OpportunitySerializer
+    permission_classes = [IsAuthenticated]
+    http_method_names = ["patch", "options", "head"]
+
+    def get_queryset(self):
+        if self.request.user.role != "EMPLOYER":
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied(
+                "Only employers can reactivate opportunities."
+            )
+
+        return Opportunity.objects.filter(
+            employer=self.request.user
+        )
+
+    def perform_update(self, serializer):
+        serializer.save(is_active=True)
+
+
+class DeleteOpportunityView(generics.DestroyAPIView):
+    serializer_class = OpportunitySerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        if self.request.user.role != "EMPLOYER":
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied(
+                "Only employers can delete opportunities."
+            )
+
+        return Opportunity.objects.filter(
+            employer=self.request.user,
+            is_active=False,
         )

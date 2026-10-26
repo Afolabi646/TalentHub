@@ -3,6 +3,13 @@ from django.db import models
 
 
 class Opportunity(models.Model):
+    employer = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="posted_opportunities",
+        null=True,
+        blank=True,
+    )
     class Category(models.TextChoices):
         JOB = "JOB", "Job"
         INTERNSHIP = "INTERNSHIP", "Internship"

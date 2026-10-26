@@ -2,9 +2,14 @@ from django.urls import path
 from .views import (
     OpportunityListView,
     CreateOpportunityView,
+    MyOpportunitiesView,
     SavedOpportunityListView,
     SaveOpportunityView,
     RemoveSavedOpportunityView,
+    UpdateOpportunityView,
+    DeactivateOpportunityView,
+    ReactivateOpportunityView,
+    DeleteOpportunityView,
 )
 
 urlpatterns = [
@@ -17,6 +22,11 @@ urlpatterns = [
         "create/", CreateOpportunityView.as_view(),
         name="create-opportunity",
     ),
+    path(
+    "my/",
+    MyOpportunitiesView.as_view(),
+    name="my-opportunities",
+),
     path(
         "saved/",
         SavedOpportunityListView.as_view(),
@@ -32,4 +42,24 @@ urlpatterns = [
         RemoveSavedOpportunityView.as_view(),
         name="remove-saved-opportunity",
     ),
+    path(
+    "my/<int:pk>/edit/",
+    UpdateOpportunityView.as_view(),
+    name="update-opportunity",
+),
+path(
+    "my/<int:pk>/deactivate/",
+    DeactivateOpportunityView.as_view(),
+    name="deactivate-opportunity",
+),
+path(
+    "my/<int:pk>/reactivate/",
+    ReactivateOpportunityView.as_view(),
+    name="reactivate-opportunity",
+),
+path(
+    "my/<int:pk>/delete/",
+    DeleteOpportunityView.as_view(),
+    name="delete-opportunity",
+),
 ]
