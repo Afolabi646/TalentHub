@@ -5,7 +5,12 @@ from rest_framework import status
 from rest_framework.views import APIView
 
 from .models import Opportunity, SavedOpportunity
-from .serializers import OpportunitySerializer, SavedOpportunitySerializer
+from .serializers import (
+    OpportunitySerializer,
+    SavedOpportunitySerializer,
+    JobMatchSerializer,
+)
+from .matching import calculate_match_score
 
 class OpportunityListView(generics.ListAPIView):
     serializer_class = OpportunitySerializer
@@ -181,3 +186,57 @@ class DeleteOpportunityView(generics.DestroyAPIView):
             employer=self.request.user,
             is_active=False,
         )
+
+
+class JobMatchesView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if request.user.role != "APPLICANT":
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied(
+                "Only applicants can view job matches."
+            )
+
+        try:
+            profile = request.user.applicant_profile
+        except Exception:
+            return Response(
+                {"error": "Please complete your applicant profile first."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        opportunities = Opportunity.objects.filter(
+            is_active=True
+        ).order_by("-created_at")
+
+        matches = []
+
+        for opportunity in opportunities:
+            score = calculate_match_score(profile, opportunity)
+
+            match = {
+                "id": opportunity.id,
+                "title": opportunity.title,
+                "organization": opportunity.organization,
+                "category": opportunity.category,
+                "location": opportunity.location,
+                "deadline": opportunity.deadline,
+                "description": opportunity.description,
+                "eligibility": opportunity.eligibility,
+                "match_score": score,
+            }
+
+            matches.append(match)
+
+        matches.sort(
+            key=lambda item: item["match_score"],
+            reverse=True,
+        )
+
+        serializer = JobMatchSerializer(
+            matches,
+            many=True,
+        )
+
+        return Response(serializer.data)

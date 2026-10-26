@@ -26,3 +26,21 @@ class SavedOpportunitySerializer(serializers.ModelSerializer):
     class Meta:
         model = SavedOpportunity
         fields = ["id", "opportunity", "created_at"]
+
+
+class JobMatchSerializer(serializers.ModelSerializer):
+    match_score = serializers.FloatField(read_only=True)
+
+    class Meta:
+        model = Opportunity
+        fields = [
+            "id",
+            "title",
+            "organization",
+            "category",
+            "location",
+            "deadline",
+            "description",
+            "eligibility",
+            "match_score",
+        ]

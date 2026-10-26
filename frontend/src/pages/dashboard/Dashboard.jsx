@@ -4,6 +4,10 @@ import CreateOpportunity from "../CreateOpportunity";
 import Opportunities from "../Opportunities";
 import SavedOpportunities from "../SavedOpportunities";
 import MyOpportunities from "../MyOpportunities";
+import MyApplications from "../MyApplications";
+import EmployerApplications from "../EmployerApplications";
+import JobMatches from "../JobMatches";
+
 
 export default function Dashboard({ user, onLogout }) {
   const isEmployer = user?.role === "EMPLOYER";
@@ -15,12 +19,24 @@ export default function Dashboard({ user, onLogout }) {
     sessionStorage.getItem("dashboardPage") === "myOpportunities",
   );
 
+  const [showEmployerApplications, setShowEmployerApplications] = useState(
+    sessionStorage.getItem("dashboardPage") === "employerApplications",
+  );
+
   const [showOpportunities, setShowOpportunities] = useState(
     sessionStorage.getItem("dashboardPage") === "opportunities",
   );
 
   const [showSavedOpportunities, setShowSavedOpportunities] = useState(
     sessionStorage.getItem("dashboardPage") === "savedOpportunities",
+  );
+
+  const [showMyApplications, setShowMyApplications] = useState(
+    sessionStorage.getItem("dashboardPage") === "myApplications",
+  );
+
+  const [showJobMatches, setShowJobMatches] = useState(
+    sessionStorage.getItem("dashboardPage") === "jobMatches",
   );
 
   const [showCreateOpportunity, setShowCreateOpportunity] = useState(
@@ -48,7 +64,37 @@ export default function Dashboard({ user, onLogout }) {
       </nav>
 
       <section className="mx-auto max-w-6xl px-6 py-10">
-        {isEmployer && showMyOpportunities ? (
+        {!isEmployer && showJobMatches ? (
+          <div className="rounded-xl bg-white p-6 shadow-sm">
+            <button
+              type="button"
+              onClick={() => {
+                sessionStorage.setItem("dashboardPage", "dashboard");
+                setShowJobMatches(false);
+              }}
+              className="mb-5 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+            >
+              ← Back to Dashboard
+            </button>
+
+            <JobMatches />
+          </div>
+        ) : isEmployer && showEmployerApplications ? (
+          <div className="rounded-xl bg-white p-6 shadow-sm">
+            <button
+              type="button"
+              onClick={() => {
+                sessionStorage.setItem("dashboardPage", "dashboard");
+                setShowEmployerApplications(false);
+              }}
+              className="mb-5 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+            >
+              ← Back to Dashboard
+            </button>
+
+            <EmployerApplications />
+          </div>
+        ) : isEmployer && showMyOpportunities ? (
           <div className="rounded-xl bg-white p-6 shadow-sm">
             <button
               type="button"
@@ -72,6 +118,21 @@ export default function Dashboard({ user, onLogout }) {
               }}
               onCreated={() => {}}
             />
+          </div>
+        ) : !isEmployer && showMyApplications ? (
+          <div>
+            <button
+              type="button"
+              onClick={() => {
+                sessionStorage.setItem("dashboardPage", "dashboard");
+                setShowMyApplications(false);
+              }}
+              className="mb-6 rounded-lg bg-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-300"
+            >
+              ← Back to Dashboard
+            </button>
+
+            <MyApplications />
           </div>
         ) : !isEmployer && showSavedOpportunities ? (
           <div className="rounded-xl bg-white p-6 shadow-sm">
@@ -159,9 +220,27 @@ export default function Dashboard({ user, onLogout }) {
                     <h3 className="text-lg font-semibold text-slate-800">
                       Manage Applicants
                     </h3>
+
                     <p className="mt-2 text-slate-600">
-                      Review people interested in your opportunities.
+                      Review applications, read cover letters, and update
+                      applicant status.
                     </p>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        sessionStorage.setItem(
+                          "dashboardPage",
+                          "employerApplications",
+                        );
+                        setShowCreateOpportunity(false);
+                        setShowMyOpportunities(false);
+                        setShowEmployerApplications(true);
+                      }}
+                      className="mt-5 rounded-lg bg-blue-600 px-5 py-3 font-medium text-white hover:bg-blue-700"
+                    >
+                      View Applications
+                    </button>
                   </div>
 
                   <div className="rounded-xl bg-white p-6 shadow-sm">
@@ -216,6 +295,21 @@ export default function Dashboard({ user, onLogout }) {
                     <button
                       type="button"
                       onClick={() => {
+                        sessionStorage.setItem("dashboardPage", "jobMatches");
+                        setShowProfile(false);
+                        setShowOpportunities(false);
+                        setShowSavedOpportunities(false);
+                        setShowMyApplications(false);
+                        setShowJobMatches(true);
+                      }}
+                      className="mt-3 rounded-lg bg-blue-600 px-5 py-3 font-medium text-white hover:bg-blue-700"
+                    >
+                      Find My Job Matches
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
                         sessionStorage.setItem(
                           "dashboardPage",
                           "savedOpportunities",
@@ -243,12 +337,30 @@ export default function Dashboard({ user, onLogout }) {
                   </div>
 
                   <div className="rounded-xl bg-white p-6 shadow-sm">
-                    <h3 className="text-lg font-semibold text-slate-800">
+                    <h3 className="text-lg font-bold text-slate-900">
                       My Applications
                     </h3>
-                    <p className="mt-2 text-slate-600">
+
+                    <p className="mt-2 text-sm text-slate-600">
                       Keep track of the opportunities you apply for.
                     </p>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        sessionStorage.setItem(
+                          "dashboardPage",
+                          "myApplications",
+                        );
+                        setShowMyApplications(true);
+                        setShowProfile(false);
+                        setShowOpportunities(false);
+                        setShowSavedOpportunities(false);
+                      }}
+                      className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                    >
+                      View My Applications
+                    </button>
                   </div>
                 </>
               )}

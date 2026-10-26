@@ -12,6 +12,10 @@ function Opportunities() {
   const [previousPageUrl, setPreviousPageUrl] = useState(null);
   const [savedIds, setSavedIds] = useState([]);
   const [savingId, setSavingId] = useState(null);
+  const [coverLetter, setCoverLetter] = useState("");
+  const [applying, setApplying] = useState(false);
+  const [applicationMessage, setApplicationMessage] = useState("");
+  const [appliedIds, setAppliedIds] = useState([]);
 
   useEffect(() => {
    fetch(`http://127.0.0.1:8000/api/opportunities/?page=${currentPage}`)
@@ -105,6 +109,61 @@ function Opportunities() {
       alert(error.message);
     } finally {
       setSavingId(null);
+    }
+  };
+
+  const handleApply = async () => {
+    const accessToken = localStorage.getItem("accessToken");
+
+    if (!accessToken) {
+      setApplicationMessage("Please log in to apply.");
+      return;
+    }
+
+    if (!selectedOpportunity) return;
+
+    setApplying(true);
+    setApplicationMessage("");
+
+    try {
+      const response = await fetch(
+        "http://127.0.0.1:8000/api/applications/apply/",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            opportunity: selectedOpportunity.id,
+            cover_letter: coverLetter,
+          }),
+        },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        const errorMessage =
+          data.detail ||
+          data.non_field_errors?.[0] ||
+          "Could not submit your application.";
+
+        throw new Error(errorMessage);
+      }
+
+      setAppliedIds((ids) =>
+        ids.includes(selectedOpportunity.id)
+          ? ids
+          : [...ids, selectedOpportunity.id],
+      );
+
+      setApplicationMessage("Your application was submitted successfully!");
+      setCoverLetter("");
+    } catch (error) {
+      setApplicationMessage(error.message);
+    } finally {
+      setApplying(false);
     }
   };
 
@@ -256,6 +315,51 @@ function Opportunities() {
                   An application link has not been provided yet.
                 </p>
               )}
+
+              <div className="mt-6 border-t border-slate-200 pt-5">
+                <h3 className="text-base font-bold text-slate-900">
+                  Apply inside AI TalentHub
+                </h3>
+
+                {appliedIds.includes(opportunity.id) ? (
+                  <p className="mt-3 rounded-xl bg-green-50 p-3 text-sm text-green-700">
+                    ✓ You have applied for this opportunity.
+                  </p>
+                ) : (
+                  <>
+                    <label
+                      htmlFor="cover-letter"
+                      className="mt-4 block text-sm font-semibold text-slate-700"
+                    >
+                      Cover letter (optional)
+                    </label>
+
+                    <textarea
+                      id="cover-letter"
+                      value={coverLetter}
+                      onChange={(event) => setCoverLetter(event.target.value)}
+                      placeholder="Explain why you are suitable for this opportunity..."
+                      rows={5}
+                      className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={handleApply}
+                      disabled={applying}
+                      className={`${buttonStyle} mt-4 w-full disabled:cursor-not-allowed disabled:opacity-60`}
+                    >
+                      {applying ? "Submitting..." : "Submit Application"}
+                    </button>
+                  </>
+                )}
+
+                {applicationMessage && (
+                  <p role="status" className="mt-3 text-sm text-slate-700">
+                    {applicationMessage}
+                  </p>
+                )}
+              </div>
 
               <div className="mt-5 border-t border-slate-200 pt-4 text-sm">
                 <p className="text-slate-500">Application deadline</p>

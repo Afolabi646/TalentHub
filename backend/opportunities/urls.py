@@ -9,6 +9,7 @@ from .views import (
     UpdateOpportunityView,
     DeactivateOpportunityView,
     ReactivateOpportunityView,
+    JobMatchesView,
     DeleteOpportunityView,
 )
 
@@ -62,4 +63,9 @@ path(
     DeleteOpportunityView.as_view(),
     name="delete-opportunity",
 ),
+path(
+        "matches/",
+        JobMatchesView.as_view(),
+        name="job-matches",
+    ),
 ]
