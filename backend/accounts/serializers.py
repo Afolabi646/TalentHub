@@ -22,6 +22,13 @@ class RegisterSerializer(serializers.ModelSerializer):
             "password": {"write_only": True},
         }
 
+    def validate_role(self, value):
+        if value not in User.Role.values:
+            raise serializers.ValidationError(
+                "Please select a valid account type."
+            )
+        return value
+
     def create(self, validated_data):
         user = User.objects.create_user(
             email=validated_data["email"],
@@ -32,7 +39,6 @@ class RegisterSerializer(serializers.ModelSerializer):
             role=validated_data["role"],
         )
         return user
-
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
