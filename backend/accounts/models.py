@@ -2,6 +2,10 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 
 class User(AbstractUser):
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = []
+    email = models.EmailField(unique=True)
+
     class Role(models.TextChoices):
         APPLICANT = "APPLICANT", "Applicant"
         EMPLOYER = "EMPLOYER", "Employer"
@@ -10,7 +14,10 @@ class User(AbstractUser):
         max_length=20,
         choices=Role.choices,
         default=Role.APPLICANT
+        
     )
+
+    is_employer_approved = models.BooleanField(default=False)
 
 
 class ApplicantProfile(models.Model):

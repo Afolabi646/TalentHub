@@ -1,8 +1,8 @@
-from rest_framework import generics, permissions
+from rest_framework import generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework import status
 from rest_framework.views import APIView
+from rest_framework.exceptions import PermissionDenied
 
 from .models import Opportunity, SavedOpportunity
 from .serializers import (
@@ -11,6 +11,7 @@ from .serializers import (
     JobMatchSerializer,
 )
 from .matching import calculate_match_score
+
 
 class OpportunityListView(generics.ListAPIView):
     serializer_class = OpportunitySerializer
@@ -28,7 +29,6 @@ class MyOpportunitiesView(generics.ListAPIView):
 
     def get_queryset(self):
         if self.request.user.role != "EMPLOYER":
-            from rest_framework.exceptions import PermissionDenied
             raise PermissionDenied(
                 "Only employers can view their own opportunities."
             )
@@ -37,15 +37,20 @@ class MyOpportunitiesView(generics.ListAPIView):
             employer=self.request.user
         ).order_by("-created_at")
 
+
 class CreateOpportunityView(generics.CreateAPIView):
     serializer_class = OpportunitySerializer
     permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
         if self.request.user.role != "EMPLOYER":
-            from rest_framework.exceptions import PermissionDenied
             raise PermissionDenied(
                 "Only employers can create opportunities."
+            )
+
+        if not self.request.user.is_employer_approved:
+            raise PermissionDenied(
+                "Your employer account is awaiting approval."
             )
 
         serializer.save(employer=self.request.user)
@@ -121,9 +126,13 @@ class UpdateOpportunityView(generics.UpdateAPIView):
 
     def get_queryset(self):
         if self.request.user.role != "EMPLOYER":
-            from rest_framework.exceptions import PermissionDenied
             raise PermissionDenied(
                 "Only employers can edit opportunities."
+            )
+
+        if not self.request.user.is_employer_approved:
+            raise PermissionDenied(
+                "Your employer account is awaiting approval."
             )
 
         return Opportunity.objects.filter(
@@ -138,9 +147,13 @@ class DeactivateOpportunityView(generics.UpdateAPIView):
 
     def get_queryset(self):
         if self.request.user.role != "EMPLOYER":
-            from rest_framework.exceptions import PermissionDenied
             raise PermissionDenied(
                 "Only employers can deactivate opportunities."
+            )
+
+        if not self.request.user.is_employer_approved:
+            raise PermissionDenied(
+                "Your employer account is awaiting approval."
             )
 
         return Opportunity.objects.filter(
@@ -158,9 +171,13 @@ class ReactivateOpportunityView(generics.UpdateAPIView):
 
     def get_queryset(self):
         if self.request.user.role != "EMPLOYER":
-            from rest_framework.exceptions import PermissionDenied
             raise PermissionDenied(
                 "Only employers can reactivate opportunities."
+            )
+
+        if not self.request.user.is_employer_approved:
+            raise PermissionDenied(
+                "Your employer account is awaiting approval."
             )
 
         return Opportunity.objects.filter(
@@ -177,9 +194,13 @@ class DeleteOpportunityView(generics.DestroyAPIView):
 
     def get_queryset(self):
         if self.request.user.role != "EMPLOYER":
-            from rest_framework.exceptions import PermissionDenied
             raise PermissionDenied(
                 "Only employers can delete opportunities."
+            )
+
+        if not self.request.user.is_employer_approved:
+            raise PermissionDenied(
+                "Your employer account is awaiting approval."
             )
 
         return Opportunity.objects.filter(
@@ -193,14 +214,13 @@ class JobMatchesView(APIView):
 
     def get(self, request):
         if request.user.role != "APPLICANT":
-            from rest_framework.exceptions import PermissionDenied
             raise PermissionDenied(
                 "Only applicants can view job matches."
             )
 
         try:
             profile = request.user.applicant_profile
-        except Exception:
+        except request.user._class_.applicant_profile.RelatedObjectDoesNotExist:
             return Response(
                 {"error": "Please complete your applicant profile first."},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -215,7 +235,7 @@ class JobMatchesView(APIView):
         for opportunity in opportunities:
             score = calculate_match_score(profile, opportunity)
 
-            match = {
+            matches.append({
                 "id": opportunity.id,
                 "title": opportunity.title,
                 "organization": opportunity.organization,
@@ -225,9 +245,7 @@ class JobMatchesView(APIView):
                 "description": opportunity.description,
                 "eligibility": opportunity.eligibility,
                 "match_score": score,
-            }
-
-            matches.append(match)
+            })
 
         matches.sort(
             key=lambda item: item["match_score"],
