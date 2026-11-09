@@ -26,8 +26,13 @@ class JobApplication(models.Model):
     applied_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ("applicant", "opportunity")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["applicant", "opportunity"],
+                name="unique_applicant_opportunity"
+            )
+        ]
         ordering = ["-applied_at"]
 
-    def __str__(self):
+    def _str_(self):
         return f"{self.applicant} - {self.opportunity.title}"

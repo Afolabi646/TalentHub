@@ -7,9 +7,8 @@ class Opportunity(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="posted_opportunities",
-        null=True,
-        blank=True,
     )
+
     class Category(models.TextChoices):
         JOB = "JOB", "Job"
         INTERNSHIP = "INTERNSHIP", "Internship"
@@ -30,29 +29,30 @@ class Opportunity(models.Model):
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
+    def _str_(self):
         return self.title
-
-
 
 
 class SavedOpportunity(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name="saved_opportunities"
+        related_name="saved_opportunities",
     )
     opportunity = models.ForeignKey(
-        "opportunities.Opportunity",
+        Opportunity,
         on_delete=models.CASCADE,
-        related_name="saved_by_users"
+        related_name="saved_by_users",
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ("user", "opportunity")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "opportunity"],
+                name="unique_saved_opportunity_per_user",
+            )
+        ]
 
-    def __str__(self):
+    def _str_(self):
         return f"{self.user} saved {self.opportunity.title}"
-
-# Create your models here.

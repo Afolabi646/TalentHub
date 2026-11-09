@@ -1,0 +1,25 @@
+POST http://127.0.0.1:8000/api/applications/apply/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzkzNjEzNjk2LCJpYXQiOjE3OTM2MTMzOTYsImp0aSI6IjNhMzU4NTg1Nzc3ODQ0MWFiNWFkMzA4OWQ3YmI2YjhhIiwidXNlcl9pZCI6IjQifQ.4Nhs4Gh0EMPceWD0k6iFR5RqbC0JEETuTfXUPMsCzIs
+Content-Type: application/json
+
+{
+    "opportunity": 9,
+    "cover_letter": "I am interested in this opportunity."
+}
+
+###
+
+GET http://127.0.0.1:8000/api/applications/employer/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzkzNjE1MjQ3LCJpYXQiOjE3OTM2MTQ5NDcsImp0aSI6IjAxZjY1MmQ1YWZmZTRhMDk4YTUwMTYyYjFhNGU1ZGIzIiwidXNlcl9pZCI6IjQifQ.N8CPkleSeRHO17oBb7nwJwpTfno4iD0rWBhs-qvOGqs
+
+
+###
+
+GET http://127.0.0.1:8000/api/me/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzkzNjE1MjQ3LCJpYXQiOjE3OTM2MTQ5NDcsImp0aSI6IjAxZjY1MmQ1YWZmZTRhMDk4YTUwMTYyYjFhNGU1ZGIzIiwidXNlcl9pZCI6IjQifQ.N8CPkleSeRHO17oBb7nwJwpTfno4iD0rWBhs-qvOGqs
+
+
+###
+
+GET http://127.0.0.1:8000/api/applications/my/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzkzNjE1MzU0LCJpYXQiOjE3OTM2MTUwNTQsImp0aSI6ImI5ZjVkZTI2MDcyMzQzMjg5YThmZDM0NzAzNDZlMjE3IiwidXNlcl9pZCI6IjYifQ.3Xbs5KeO3vLaK_SHLx9Mn3cul9W22IGDIij0xEd7i-M

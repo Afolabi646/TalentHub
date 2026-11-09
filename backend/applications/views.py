@@ -1,7 +1,6 @@
 from rest_framework import generics, permissions
-from rest_framework.exceptions import ValidationError
-from rest_framework import status
-from rest_framework.response import Response
+from rest_framework.exceptions import ValidationError, PermissionDenied
+
 from .models import JobApplication
 from .serializers import (
     JobApplicationSerializer,
@@ -14,6 +13,13 @@ class ApplyForOpportunityView(generics.CreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def perform_create(self, serializer):
+        user = self.request.user
+
+        if user.role != "APPLICANT":
+            raise PermissionDenied(
+                "Only applicants can apply for opportunities."
+            )
+
         opportunity = serializer.validated_data["opportunity"]
 
         if not opportunity.is_active:
@@ -21,13 +27,13 @@ class ApplyForOpportunityView(generics.CreateAPIView):
                 "You cannot apply for an inactive opportunity."
             )
 
-        if opportunity.employer == self.request.user:
+        if opportunity.employer == user:
             raise ValidationError(
                 "You cannot apply for your own opportunity."
             )
 
         already_applied = JobApplication.objects.filter(
-            applicant=self.request.user,
+            applicant=user,
             opportunity=opportunity
         ).exists()
 
@@ -36,7 +42,7 @@ class ApplyForOpportunityView(generics.CreateAPIView):
                 "You have already applied for this opportunity."
             )
 
-        serializer.save(applicant=self.request.user)
+        serializer.save(applicant=user)
 
 
 class MyApplicationsView(generics.ListAPIView):
@@ -44,6 +50,11 @@ class MyApplicationsView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
+        if self.request.user.role != "APPLICANT":
+            raise PermissionDenied(
+                "Only applicants can view their applications."
+            )
+
         return JobApplication.objects.filter(
             applicant=self.request.user
         ).select_related("opportunity", "applicant")
@@ -54,8 +65,20 @@ class EmployerApplicationsView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
+        user = self.request.user
+
+        if user.role != "EMPLOYER":
+            raise PermissionDenied(
+                "Only employers can view received applications."
+            )
+
+        if not user.is_employer_approved:
+            raise PermissionDenied(
+                "Your employer account is awaiting approval."
+            )
+
         return JobApplication.objects.filter(
-            opportunity__employer=self.request.user
+            opportunity__employer=user
         ).select_related("opportunity", "applicant")
 
 
@@ -65,8 +88,20 @@ class UpdateApplicationStatusView(generics.UpdateAPIView):
     http_method_names = ["patch", "head", "options"]
 
     def get_queryset(self):
+        user = self.request.user
+
+        if user.role != "EMPLOYER":
+            raise PermissionDenied(
+                "Only employers can update application statuses."
+            )
+
+        if not user.is_employer_approved:
+            raise PermissionDenied(
+                "Your employer account is awaiting approval."
+            )
+
         return JobApplication.objects.filter(
-            opportunity__employer=self.request.user
+            opportunity__employer=user
         )
 
     def perform_update(self, serializer):
@@ -80,6 +115,8 @@ class UpdateApplicationStatusView(generics.UpdateAPIView):
         ]
 
         if new_status not in allowed_statuses:
-            raise ValidationError("Invalid application status.")
+            raise ValidationError(
+                "Invalid application status."
+            )
 
         serializer.save()
