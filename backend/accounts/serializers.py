@@ -9,6 +9,11 @@ class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
     username_field = "email"
 
 class RegisterSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(
+        write_only=True,
+        validators=[]
+    )
+
     class Meta:
         model = User
         fields = [
@@ -18,27 +23,47 @@ class RegisterSerializer(serializers.ModelSerializer):
             "last_name",
             "role",
         ]
-        extra_kwargs = {
-            "password": {"write_only": True},
-        }
+
+    def validate_email(self, value):
+        email = value.strip().lower()
+
+        if User.objects.filter(email__iexact=email).exists():
+            raise serializers.ValidationError(
+                "An account with this email already exists."
+            )
+
+        return email
+
+    def validate_password(self, value):
+        from django.contrib.auth.password_validation import validate_password
+
+        user = User(
+            email=self.initial_data.get("email", ""),
+            first_name=self.initial_data.get("first_name", ""),
+            last_name=self.initial_data.get("last_name", ""),
+        )
+
+        validate_password(value, user=user)
+        return value
 
     def validate_role(self, value):
         if value not in User.Role.values:
             raise serializers.ValidationError(
                 "Please select a valid account type."
             )
+
         return value
 
     def create(self, validated_data):
-        user = User.objects.create_user(
+        return User.objects.create_user(
             email=validated_data["email"],
             username=validated_data["email"],
             password=validated_data["password"],
-            first_name=validated_data["first_name"],
-            last_name=validated_data["last_name"],
+            first_name=validated_data.get("first_name", ""),
+            last_name=validated_data.get("last_name", ""),
             role=validated_data["role"],
         )
-        return user
+
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
