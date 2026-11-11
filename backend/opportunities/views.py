@@ -11,6 +11,7 @@ from .serializers import (
     JobMatchSerializer,
 )
 from .matching import calculate_match_score
+from django.core.exceptions import ObjectDoesNotExist
 
 
 class OpportunityListView(generics.ListAPIView):
@@ -220,7 +221,7 @@ class JobMatchesView(APIView):
 
         try:
             profile = request.user.applicant_profile
-        except request.user._class_.applicant_profile.RelatedObjectDoesNotExist:
+        except ObjectDoesNotExist:
             return Response(
                 {"error": "Please complete your applicant profile first."},
                 status=status.HTTP_400_BAD_REQUEST,

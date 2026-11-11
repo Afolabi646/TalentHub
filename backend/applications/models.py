@@ -34,5 +34,5 @@ class JobApplication(models.Model):
         ]
         ordering = ["-applied_at"]
 
-    def _str_(self):
+    def __str__(self):
         return f"{self.applicant} - {self.opportunity.title}"

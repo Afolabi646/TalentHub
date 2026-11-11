@@ -2,6 +2,10 @@ from django.test import TestCase
 from .models import User
 from .serializers import RegisterSerializer
 
+from rest_framework.test import APITestCase
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.urls import reverse
+
 
 class RegisterSerializerSecurityTests(TestCase):
 
@@ -101,3 +105,82 @@ class RegisterSerializerSecurityTests(TestCase):
 
         self.assertFalse(serializer.is_valid())
         self.assertIn("role", serializer.errors)
+
+
+class LogoutSecurityTests(APITestCase):
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="user@example.com",
+            email="user@example.com",
+            password="SecurePassword!2026"
+        )
+
+        self.other_user = User.objects.create_user(
+            username="other@example.com",
+            email="other@example.com",
+            password="AnotherPassword!2026"
+        )
+
+        self.logout_url = reverse("logout")
+        self.refresh_url = reverse("token_refresh")
+
+        self.refresh_token = RefreshToken.for_user(self.user)
+
+    def test_authenticated_user_can_logout(self):
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.post(
+            self.logout_url,
+            {"refresh": str(self.refresh_token)},
+            format="json"
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        refresh_response = self.client.post(
+            self.refresh_url,
+            {"refresh": str(self.refresh_token)},
+            format="json"
+        )
+
+        self.assertEqual(refresh_response.status_code, 401)
+
+    def test_unauthenticated_user_cannot_logout(self):
+        response = self.client.post(
+            self.logout_url,
+            {"refresh": str(self.refresh_token)},
+            format="json"
+        )
+
+        self.assertEqual(response.status_code, 401)
+
+    def test_user_cannot_blacklist_another_users_token(self):
+        self.client.force_authenticate(user=self.other_user)
+
+        response = self.client.post(
+            self.logout_url,
+            {"refresh": str(self.refresh_token)},
+            format="json"
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+        refresh_response = self.client.post(
+            self.refresh_url,
+            {"refresh": str(self.refresh_token)},
+            format="json"
+        )
+
+        self.assertEqual(refresh_response.status_code, 200)
+
+    def test_logout_requires_refresh_token(self):
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.post(
+            self.logout_url,
+            {},
+            format="json"
+        )
+
+        self.assertEqual(response.status_code, 400)

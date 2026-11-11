@@ -54,5 +54,5 @@ class SavedOpportunity(models.Model):
             )
         ]
 
-    def _str_(self):
+    def __str__(self):
         return f"{self.user} saved {self.opportunity.title}"

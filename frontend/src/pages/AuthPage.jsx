@@ -12,7 +12,7 @@ export default function AuthPage() {
   useEffect(() => {
     async function checkAuth() {
       let accessToken = localStorage.getItem("accessToken");
-      const refreshToken = localStorage.getItem("refreshToken");
+      let refreshToken = localStorage.getItem("refreshToken");
 
       if (!accessToken) {
         setCheckingAuth(false);
@@ -46,6 +46,11 @@ export default function AuthPage() {
             accessToken = tokenData.access;
 
             localStorage.setItem("accessToken", accessToken);
+
+            if (tokenData.refresh) {
+              refreshToken = tokenData.refresh;
+              localStorage.setItem("refreshToken", refreshToken);
+            }
 
             response = await fetch("http://127.0.0.1:8000/api/me/", {
               headers: {
@@ -85,11 +90,83 @@ export default function AuthPage() {
 
   // Show the dashboard after successful login
   if (user) {
-    function handleLogout() {
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-      setUser(null);
-      setIsLogin(true);
+    async function handleLogout() {
+      let accessToken = localStorage.getItem("accessToken");
+      let refreshToken = localStorage.getItem("refreshToken");
+
+      try {
+        let response = await fetch("http://127.0.0.1:8000/api/logout/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            refresh: refreshToken,
+          }),
+        });
+
+        // If the access token has expired, refresh it first.
+        if (response.status === 401 && refreshToken) {
+          const refreshResponse = await fetch(
+            "http://127.0.0.1:8000/api/token/refresh/",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                refresh: refreshToken,
+              }),
+            },
+          );
+
+          if (!response.ok) {
+            const errorData = await response.json();
+
+            console.log("Logout status:", response.status);
+            console.log("Logout error:", errorData);
+
+            throw new Error("Secure logout failed.");
+          }
+
+          const tokenData = await refreshResponse.json();
+
+          accessToken = tokenData.access;
+          refreshToken = tokenData.refresh || refreshToken;
+
+          localStorage.setItem("accessToken", accessToken);
+          localStorage.setItem("refreshToken", refreshToken);
+
+          // Retry logout with the new tokens.
+          response = await fetch("http://127.0.0.1:8000/api/logout/", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({
+              refresh: refreshToken,
+            }),
+          });
+        }
+
+        if (!response.ok) {
+          throw new Error("Secure logout failed.");
+        }
+
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+
+        setUser(null);
+        setIsLogin(true);
+      } catch (error) {
+        console.error("Logout error:", error);
+
+        alert(
+          "Secure logout could not be completed. Please check your connection and try again.",
+        );
+      }
     }
 
     return <Dashboard user={user} onLogout={handleLogout} />;

@@ -7,6 +7,8 @@ from .serializers import (
     ApplicationStatusSerializer,
 )
 
+from django.db import IntegrityError, transaction
+
 
 class ApplyForOpportunityView(generics.CreateAPIView):
     serializer_class = JobApplicationSerializer
@@ -42,7 +44,14 @@ class ApplyForOpportunityView(generics.CreateAPIView):
                 "You have already applied for this opportunity."
             )
 
-        serializer.save(applicant=user)
+        try:
+             with transaction.atomic():
+               serializer.save(applicant=user)
+
+        except IntegrityError:
+         raise ValidationError(
+        "You have already applied for this opportunity."
+    )
 
 
 class MyApplicationsView(generics.ListAPIView):

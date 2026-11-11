@@ -5,6 +5,7 @@ from .views import (
     MeView,
     ApplicantProfileView,
     EmailTokenObtainPairView,
+    LogoutView,
 )
 
 from rest_framework_simplejwt.views import TokenRefreshView
@@ -19,4 +20,5 @@ urlpatterns = [
         ApplicantProfileView.as_view(),
         name="applicant-profile",
     ),
+    path("logout/", LogoutView.as_view(), name="logout"),
 ]
