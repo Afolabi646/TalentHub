@@ -3,6 +3,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.exceptions import PermissionDenied
+from django.db.models import Q
 
 from .models import Opportunity, SavedOpportunity
 from .serializers import (
@@ -19,9 +20,26 @@ class OpportunityListView(generics.ListAPIView):
     permission_classes = [AllowAny]
 
     def get_queryset(self):
-        return Opportunity.objects.filter(
+        queryset = Opportunity.objects.filter(
             is_active=True
-        ).order_by("-created_at")
+        )
+
+        search = self.request.query_params.get("search", "").strip()
+        location = self.request.query_params.get("location", "").strip()
+
+        if search:
+            queryset = queryset.filter(
+                Q(title__icontains=search)
+                | Q(organization__icontains=search)
+                | Q(category__icontains=search)
+            )
+
+        if location:
+            queryset = queryset.filter(
+                location__icontains=location
+            )
+
+        return queryset.order_by("-created_at")
 
 
 class MyOpportunitiesView(generics.ListAPIView):

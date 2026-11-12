@@ -6,6 +6,7 @@ function Opportunities() {
   const [error, setError] = useState("");
   const [selectedOpportunity, setSelectedOpportunity] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [submittedSearch, setSubmittedSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("ALL");
   const [currentPage, setCurrentPage] = useState(1);
   const [nextPageUrl, setNextPageUrl] = useState(null);
@@ -18,25 +19,41 @@ function Opportunities() {
   const [appliedIds, setAppliedIds] = useState([]);
 
   useEffect(() => {
-   fetch(`http://127.0.0.1:8000/api/opportunities/?page=${currentPage}`)
-     .then((response) => {
-       if (!response.ok) {
-         throw new Error("Failed to load opportunities.");
-       }
-       return response.json();
-     })
-     .then((data) => {
-       setOpportunities(data.results ?? data);
-       setNextPageUrl(data.next ?? null);
-       setPreviousPageUrl(data.previous ?? null);
-     })
-     .catch(() => {
-       setError("Could not load opportunities. Please try again.");
-     })
-     .finally(() => {
-       setLoading(false);
-     });
-  }, [ currentPage ]);
+    async function fetchOpportunities() {
+      setLoading(true);
+      setError("");
+
+      try {
+        const params = new URLSearchParams();
+
+        params.set("page", currentPage);
+
+        if (submittedSearch.trim()) {
+          params.set("search", submittedSearch.trim());
+        }
+
+        const response = await fetch(
+          `http://127.0.0.1:8000/api/opportunities/?${params.toString()}`,
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to load opportunities.");
+        }
+
+        const data = await response.json();
+
+        setOpportunities(data.results ?? data);
+        setNextPageUrl(data.next ?? null);
+        setPreviousPageUrl(data.previous ?? null);
+      } catch {
+        setError("Could not load opportunities. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchOpportunities();
+  }, [currentPage, submittedSearch]);
 
   useEffect(() => {
     const fetchSavedOpportunities = async () => {
@@ -174,18 +191,9 @@ function Opportunities() {
     "inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50";
 
   const filteredOpportunities = opportunities.filter((opportunity) => {
-    const query = searchTerm.trim().toLowerCase();
-
-    const matchesSearch =
-      (opportunity.title || "").toLowerCase().includes(query) ||
-      (opportunity.organization || "").toLowerCase().includes(query);
-
     const category = (opportunity.category || "").toUpperCase();
 
-    const matchesCategory =
-      categoryFilter === "ALL" || category === categoryFilter;
-
-    return matchesSearch && matchesCategory;
+    return categoryFilter === "ALL" || category === categoryFilter;
   });
 
   if (loading) {
@@ -407,14 +415,33 @@ function Opportunities() {
             Search opportunities
           </label>
 
-          <input
-            id="opportunity-search"
-            type="search"
-            value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
-            placeholder="Search by title or organization..."
-            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-          />
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <input
+              id="opportunity-search"
+              type="search"
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  setCurrentPage(1);
+                  setSubmittedSearch(searchTerm);
+                }
+              }}
+              placeholder="Search by title or organization..."
+              className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            />
+
+            <button
+              type="button"
+              onClick={() => {
+                setCurrentPage(1);
+                setSubmittedSearch(searchTerm);
+              }}
+              className={buttonStyle}
+            >
+              Search
+            </button>
+          </div>
         </div>
 
         <div>
