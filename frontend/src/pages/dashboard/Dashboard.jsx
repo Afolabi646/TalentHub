@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ApplicantProfile from "../../components/applicant/ApplicantProfile";
 import CreateOpportunity from "../CreateOpportunity";
 import Opportunities from "../Opportunities";
@@ -8,365 +8,619 @@ import MyApplications from "../MyApplications";
 import EmployerApplications from "../EmployerApplications";
 import JobMatches from "../JobMatches";
 
-
 export default function Dashboard({ user, onLogout }) {
   const isEmployer = user?.role === "EMPLOYER";
-  const [showProfile, setShowProfile] = useState(
-    sessionStorage.getItem("dashboardPage") === "profile",
+
+  const [activePage, setActivePage] = useState(
+    sessionStorage.getItem("dashboardPage") || "dashboard",
   );
 
-  const [showMyOpportunities, setShowMyOpportunities] = useState(
-    sessionStorage.getItem("dashboardPage") === "myOpportunities",
-  );
+  useEffect(() => {
+    if (activePage !== "dashboard") {
+      document.getElementById("dashboard-content")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }, [activePage]);
 
-  const [showEmployerApplications, setShowEmployerApplications] = useState(
-    sessionStorage.getItem("dashboardPage") === "employerApplications",
-  );
+  const firstName = user?.first_name || "User";
 
-  const [showOpportunities, setShowOpportunities] = useState(
-    sessionStorage.getItem("dashboardPage") === "opportunities",
-  );
+  const fullName =
+    `${user?.first_name || ""} ${user?.last_name || ""}`.trim() || "User";
 
-  const [showSavedOpportunities, setShowSavedOpportunities] = useState(
-    sessionStorage.getItem("dashboardPage") === "savedOpportunities",
-  );
+  const navigate = (page) => {
+    sessionStorage.setItem("dashboardPage", page);
+    setActivePage(page);
+  };
 
-  const [showMyApplications, setShowMyApplications] = useState(
-    sessionStorage.getItem("dashboardPage") === "myApplications",
-  );
+  const navigation = isEmployer
+    ? [
+        { id: "dashboard", label: "Overview", icon: "⌂" },
+        { id: "createOpportunity", label: "Post Opportunity", icon: "+" },
+        { id: "myOpportunities", label: "My Opportunities", icon: "▤" },
+        { id: "employerApplications", label: "Applications", icon: "▣" },
+      ]
+    : [
+        { id: "dashboard", label: "Overview", icon: "⌂" },
+        { id: "opportunities", label: "Find Opportunities", icon: "⌕" },
+        { id: "jobMatches", label: "AI Job Matches", icon: "✧" },
+        { id: "myApplications", label: "My Applications", icon: "▣" },
+        { id: "savedOpportunities", label: "Saved Opportunities", icon: "♡" },
+        { id: "profile", label: "My Profile", icon: "◉" },
+      ];
 
-  const [showJobMatches, setShowJobMatches] = useState(
-    sessionStorage.getItem("dashboardPage") === "jobMatches",
-  );
+  const pageTitles = {
+    dashboard: "Overview",
+    opportunities: "Find Opportunities",
+    jobMatches: "AI Job Matches",
+    myApplications: "My Applications",
+    savedOpportunities: "Saved Opportunities",
+    profile: "My Profile",
+    createOpportunity: "Post Opportunity",
+    myOpportunities: "My Opportunities",
+    employerApplications: "Applications",
+  };
 
-  const [showCreateOpportunity, setShowCreateOpportunity] = useState(
-    sessionStorage.getItem("dashboardPage") === "createOpportunity",
-  );
+  const renderPage = () => {
+    if (activePage === "profile" && !isEmployer) {
+      return <ApplicantProfile />;
+    }
+
+    if (activePage === "opportunities" && !isEmployer) {
+      return <Opportunities />;
+    }
+
+    if (activePage === "jobMatches" && !isEmployer) {
+      return <JobMatches />;
+    }
+
+    if (activePage === "myApplications" && !isEmployer) {
+      return <MyApplications />;
+    }
+
+    if (activePage === "savedOpportunities" && !isEmployer) {
+      return <SavedOpportunities />;
+    }
+
+    if (activePage === "createOpportunity" && isEmployer) {
+      return (
+        <CreateOpportunity
+          onBack={() => navigate("dashboard")}
+          onCreated={() => {}}
+        />
+      );
+    }
+
+    if (activePage === "myOpportunities" && isEmployer) {
+      return <MyOpportunities />;
+    }
+
+    if (activePage === "employerApplications" && isEmployer) {
+      return <EmployerApplications />;
+    }
+
+    return null;
+  };
 
   return (
-    <main className="min-h-screen bg-slate-100">
-      <nav className="flex items-center justify-between bg-white px-6 py-4 shadow-sm">
-        <h1 className="text-xl font-bold text-blue-600">AI TalentHub</h1>
+    <main className="min-h-screen bg-slate-50 lg:flex">
+      {/* SIDEBAR */}
+      <aside className="flex w-full flex-col border-r border-slate-200 bg-white lg:fixed lg:inset-y-0 lg:w-64">
+        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-6">
+          <h1 className="text-2xl font-extrabold tracking-tight text-blue-700">
+            AI TalentHub<span className="text-slate-900">.</span>
+          </h1>
+        </div>
 
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-slate-600">
-            {user?.first_name || "User"}
-          </span>
+        <div className="flex items-center gap-3 border-b border-slate-100 px-6 py-5">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-blue-100 text-lg font-bold text-blue-700">
+            {firstName.charAt(0).toUpperCase()}
+          </div>
 
+          <div className="min-w-0">
+            <p className="truncate text-sm font-bold text-slate-900">
+              {fullName}
+            </p>
+            <p className="text-xs text-slate-500">
+              {isEmployer ? "Employer Account" : "Applicant Account"}
+            </p>
+          </div>
+        </div>
+
+        <nav className="grid grid-cols-2 gap-2 p-4 lg:flex lg:flex-1 lg:flex-col">
+          <p className="col-span-2 mb-2 px-3 text-xs font-bold uppercase tracking-widest text-slate-400">
+            Workspace
+          </p>
+
+          {navigation.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => navigate(item.id)}
+              className={`flex items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold transition ${
+                activePage === item.id
+                  ? "bg-blue-50 text-blue-700"
+                  : "text-slate-600 hover:bg-slate-50 hover:text-blue-700"
+              }`}
+            >
+              <span className="text-lg">{item.icon}</span>
+              {item.label}
+            </button>
+          ))}
+        </nav>
+
+        <div className="border-t border-slate-100 p-4">
           <button
             type="button"
             onClick={onLogout}
-            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+            className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-red-600 transition hover:bg-red-50"
           >
-            Logout
+            <span>↗</span>
+            Sign Out
           </button>
         </div>
-      </nav>
+      </aside>
 
-      <section className="mx-auto max-w-6xl px-6 py-10">
-        {!isEmployer && showJobMatches ? (
-          <div className="rounded-xl bg-white p-6 shadow-sm">
-            <button
-              type="button"
-              onClick={() => {
-                sessionStorage.setItem("dashboardPage", "dashboard");
-                setShowJobMatches(false);
-              }}
-              className="mb-5 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
-            >
-              ← Back to Dashboard
-            </button>
-
-            <JobMatches />
-          </div>
-        ) : isEmployer && showEmployerApplications ? (
-          <div className="rounded-xl bg-white p-6 shadow-sm">
-            <button
-              type="button"
-              onClick={() => {
-                sessionStorage.setItem("dashboardPage", "dashboard");
-                setShowEmployerApplications(false);
-              }}
-              className="mb-5 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
-            >
-              ← Back to Dashboard
-            </button>
-
-            <EmployerApplications />
-          </div>
-        ) : isEmployer && showMyOpportunities ? (
-          <div className="rounded-xl bg-white p-6 shadow-sm">
-            <button
-              type="button"
-              onClick={() => {
-                sessionStorage.setItem("dashboardPage", "dashboard");
-                setShowMyOpportunities(false);
-              }}
-              className="mb-5 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
-            >
-              ← Back to Dashboard
-            </button>
-
-            <MyOpportunities />
-          </div>
-        ) : isEmployer && showCreateOpportunity ? (
-          <div className="rounded-xl bg-white p-6 shadow-sm">
-            <CreateOpportunity
-              onBack={() => {
-                sessionStorage.setItem("dashboardPage", "dashboard");
-                setShowCreateOpportunity(false);
-              }}
-              onCreated={() => {}}
-            />
-          </div>
-        ) : !isEmployer && showMyApplications ? (
+      {/* MAIN CONTENT */}
+      <section className="min-w-0 flex-1 lg:ml-64">
+        {/* TOP HEADER */}
+        <header className="flex items-center justify-between border-b border-slate-200 bg-white px-5 py-5 sm:px-8">
           <div>
-            <button
-              type="button"
-              onClick={() => {
-                sessionStorage.setItem("dashboardPage", "dashboard");
-                setShowMyApplications(false);
-              }}
-              className="mb-6 rounded-lg bg-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-300"
-            >
-              ← Back to Dashboard
-            </button>
-
-            <MyApplications />
-          </div>
-        ) : !isEmployer && showSavedOpportunities ? (
-          <div className="rounded-xl bg-white p-6 shadow-sm">
-            <button
-              type="button"
-              onClick={() => {
-                sessionStorage.setItem("dashboardPage", "dashboard");
-                setShowSavedOpportunities(false);
-              }}
-              className="mb-5 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
-            >
-              ← Back to Dashboard
-            </button>
-
-            <SavedOpportunities />
-          </div>
-        ) : !isEmployer && showOpportunities ? (
-          <div className="rounded-xl bg-white p-6 shadow-sm">
-            <button
-              type="button"
-              onClick={() => {
-                sessionStorage.setItem("dashboardPage", "dashboard");
-                setShowOpportunities(false);
-              }}
-              className="mb-5 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
-            >
-              ← Back to Dashboard
-            </button>
-
-            <Opportunities />
-          </div>
-        ) : !isEmployer && showProfile ? (
-          <div className="rounded-xl bg-white p-6 shadow-sm">
-            <button
-              type="button"
-              onClick={() => {
-                sessionStorage.setItem("dashboardPage", "dashboard");
-                setShowProfile(false);
-              }}
-              className="mb-5 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
-            >
-              ← Back to Dashboard
-            </button>
-
-            <ApplicantProfile />
-          </div>
-        ) : (
-          <>
-            <h2 className="text-3xl font-bold text-slate-800">
-              Welcome, {user?.first_name || "User"}!
-            </h2>
-
-            <p className="mt-2 text-slate-600">
-              {isEmployer
-                ? "Manage your opportunities and discover talented people."
-                : "Discover jobs, internships, and new career opportunities."}
+            <p className="text-xs font-medium text-slate-400">
+              AI TALENTHUB / WORKSPACE
             </p>
+            <h2 className="mt-1 text-lg font-bold text-slate-900">
+              {pageTitles[activePage] || "Overview"}
+            </h2>
+          </div>
 
-            <div className="mt-8 grid gap-6 md:grid-cols-2">
-              {isEmployer ? (
-                <>
-                  <div className="rounded-xl bg-white p-6 shadow-sm">
-                    <h3 className="text-lg font-semibold text-slate-800">
-                      Post an Opportunity
-                    </h3>
-                    <p className="mt-2 text-slate-600">
-                      Share a job or internship with potential applicants.
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        sessionStorage.setItem(
-                          "dashboardPage",
-                          "createOpportunity",
-                        );
-                        setShowCreateOpportunity(true);
-                      }}
-                      className="mt-5 rounded-lg bg-blue-600 px-5 py-3 font-medium text-white hover:bg-blue-700"
-                    >
-                      Create Opportunity
-                    </button>
-                  </div>
+          <div className="flex items-center gap-3">
+            <span className="hidden text-sm font-medium text-slate-600 sm:block">
+              {firstName}
+            </span>
 
-                  <div className="rounded-xl bg-white p-6 shadow-sm">
-                    <h3 className="text-lg font-semibold text-slate-800">
-                      Manage Applicants
-                    </h3>
-
-                    <p className="mt-2 text-slate-600">
-                      Review applications, read cover letters, and update
-                      applicant status.
-                    </p>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        sessionStorage.setItem(
-                          "dashboardPage",
-                          "employerApplications",
-                        );
-                        setShowCreateOpportunity(false);
-                        setShowMyOpportunities(false);
-                        setShowEmployerApplications(true);
-                      }}
-                      className="mt-5 rounded-lg bg-blue-600 px-5 py-3 font-medium text-white hover:bg-blue-700"
-                    >
-                      View Applications
-                    </button>
-                  </div>
-
-                  <div className="rounded-xl bg-white p-6 shadow-sm">
-                    <h3 className="text-lg font-semibold text-slate-800">
-                      My Opportunities
-                    </h3>
-
-                    <p className="mt-2 text-slate-600">
-                      View and manage the jobs and internships you have posted.
-                    </p>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        sessionStorage.setItem(
-                          "dashboardPage",
-                          "myOpportunities",
-                        );
-                        setShowCreateOpportunity(false);
-                        setShowMyOpportunities(true);
-                      }}
-                      className="mt-5 rounded-lg bg-blue-600 px-5 py-3 font-medium text-white hover:bg-blue-700"
-                    >
-                      View My Opportunities
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="rounded-xl bg-white p-6 shadow-sm">
-                    <h3 className="text-lg font-semibold text-slate-800">
-                      Find Opportunities
-                    </h3>
-                    <p className="mt-2 text-slate-600">
-                      Explore jobs and internships that match your goals.
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        sessionStorage.setItem(
-                          "dashboardPage",
-                          "opportunities",
-                        );
-                        setShowProfile(false);
-                        setShowOpportunities(true);
-                      }}
-                      className="mt-5 rounded-lg bg-blue-600 px-5 py-3 font-medium text-white hover:bg-blue-700"
-                    >
-                      Browse Opportunities
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        sessionStorage.setItem("dashboardPage", "jobMatches");
-                        setShowProfile(false);
-                        setShowOpportunities(false);
-                        setShowSavedOpportunities(false);
-                        setShowMyApplications(false);
-                        setShowJobMatches(true);
-                      }}
-                      className="mt-3 rounded-lg bg-blue-600 px-5 py-3 font-medium text-white hover:bg-blue-700"
-                    >
-                      Find My Job Matches
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        sessionStorage.setItem(
-                          "dashboardPage",
-                          "savedOpportunities",
-                        );
-                        setShowOpportunities(false);
-                        setShowProfile(false);
-                        setShowSavedOpportunities(true);
-                      }}
-                      className="mt-3 rounded-lg border border-blue-600 px-5 py-3 font-medium text-blue-600 hover:bg-blue-50"
-                    >
-                      Saved Opportunities
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        sessionStorage.setItem("dashboardPage", "profile");
-                        setShowOpportunities(false);
-                        setShowProfile(true);
-                      }}
-                      className="mt-3 rounded-lg border border-blue-600 px-5 py-3 font-medium text-blue-600 hover:bg-blue-50"
-                    >
-                      Edit Applicant Profile
-                    </button>
-                  </div>
-
-                  <div className="rounded-xl bg-white p-6 shadow-sm">
-                    <h3 className="text-lg font-bold text-slate-900">
-                      My Applications
-                    </h3>
-
-                    <p className="mt-2 text-sm text-slate-600">
-                      Keep track of the opportunities you apply for.
-                    </p>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        sessionStorage.setItem(
-                          "dashboardPage",
-                          "myApplications",
-                        );
-                        setShowMyApplications(true);
-                        setShowProfile(false);
-                        setShowOpportunities(false);
-                        setShowSavedOpportunities(false);
-                      }}
-                      className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-                    >
-                      View My Applications
-                    </button>
-                  </div>
-                </>
-              )}
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-700">
+              {firstName.charAt(0).toUpperCase()}
             </div>
-          </>
-        )}
+          </div>
+        </header>
+
+        <div
+          id="dashboard-content"
+          className="mx-auto max-w-7xl p-5 sm:p-8 scroll-mt-4"
+        >
+          {/* APPLICANT OVERVIEW */}
+          {!isEmployer && activePage === "dashboard" && (
+            <div className="space-y-9">
+              {/* WELCOME HERO */}
+              <section className="relative isolate overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-blue-950 to-blue-800 p-7 text-white shadow-xl sm:p-10 lg:p-12">
+                <div className="pointer-events-none absolute -right-16 -top-20 -z-10 h-72 w-72 rounded-full bg-blue-400/20 blur-3xl" />
+                <div className="pointer-events-none absolute -bottom-24 right-1/4 -z-10 h-64 w-64 rounded-full bg-indigo-400/20 blur-3xl" />
+
+                <div className="relative max-w-2xl">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-blue-300/20 bg-white/10 px-3 py-1.5 text-xs font-semibold tracking-wide text-blue-200">
+                    <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                    APPLICANT WORKSPACE
+                  </div>
+
+                  <h1 className="mt-6 text-3xl font-extrabold leading-tight tracking-tight sm:text-4xl lg:text-5xl">
+                    Welcome back, {firstName}!
+                  </h1>
+
+                  <p className="mt-4 max-w-xl text-sm leading-7 text-blue-100 sm:text-base">
+                    Your next career opportunity could be closer than you think.
+                    Discover opportunities, explore AI-powered job matches and
+                    take the next step in your professional journey.
+                  </p>
+
+                  <div className="mt-8 flex flex-wrap gap-3">
+                    <button
+                      type="button"
+                      onClick={() => navigate("opportunities")}
+                      className="rounded-xl bg-white px-6 py-3.5 text-sm font-bold text-blue-900 shadow-lg transition hover:-translate-y-0.5 hover:bg-blue-50"
+                    >
+                      Explore Opportunities →
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => navigate("profile")}
+                      className="rounded-xl border border-white/25 bg-white/10 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-white/20"
+                    >
+                      View My Profile
+                    </button>
+                  </div>
+                </div>
+              </section>
+
+              {/* CAREER TOOLS */}
+              <section>
+                <div className="mb-6 flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-widest text-blue-700">
+                      YOUR WORKSPACE
+                    </p>
+                    <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-slate-900">
+                      Your Career Tools
+                    </h2>
+                    <p className="mt-2 text-sm text-slate-500">
+                      Everything you need to manage and grow your career.
+                    </p>
+                  </div>
+                </div>
+
+                {(() => {
+                  const tools = [
+                    {
+                      title: "Find Opportunities",
+                      description:
+                        "Explore available jobs and internships that align with your career goals.",
+                      action: "opportunities",
+                      actionLabel: "Browse opportunities",
+                      icon: "⌕",
+                      color: "bg-blue-50 text-blue-700",
+                    },
+                    {
+                      title: "AI Job Matches",
+                      description:
+                        "Discover opportunities matched to your skills and professional interests.",
+                      action: "jobMatches",
+                      actionLabel: "Explore job matches",
+                      icon: "✧",
+                      color: "bg-violet-50 text-violet-700",
+                    },
+                    {
+                      title: "My Applications",
+                      description:
+                        "Keep track of opportunities you've applied for and their progress.",
+                      action: "myApplications",
+                      actionLabel: "Track applications",
+                      icon: "▣",
+                      color: "bg-emerald-50 text-emerald-700",
+                    },
+                    {
+                      title: "Saved Opportunities",
+                      description:
+                        "Keep interesting opportunities organised so you can revisit them later.",
+                      action: "savedOpportunities",
+                      actionLabel: "View saved jobs",
+                      icon: "♡",
+                      color: "bg-rose-50 text-rose-700",
+                    },
+                    {
+                      title: "My Profile",
+                      description:
+                        "Manage your professional information, skills, experience and portfolio.",
+                      action: "profile",
+                      actionLabel: "Manage profile",
+                      icon: "◉",
+                      color: "bg-amber-50 text-amber-700",
+                    },
+                  ];
+
+                  return (
+                    <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                      {tools.map((tool) => (
+                        <button
+                          key={tool.action}
+                          type="button"
+                          onClick={() => navigate(tool.action)}
+                          className="group flex min-h-64 flex-col rounded-2xl border border-slate-200/80 bg-white p-6 text-left shadow-sm transition duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl hover:shadow-blue-900/5"
+                        >
+                          <div className="flex items-start justify-between">
+                            <div
+                              className={`flex h-12 w-12 items-center justify-center rounded-2xl text-2xl ${tool.color}`}
+                            >
+                              {tool.icon}
+                            </div>
+
+                            <span className="text-lg text-slate-300 transition group-hover:translate-x-1 group-hover:text-blue-700">
+                              →
+                            </span>
+                          </div>
+
+                          <h3 className="mt-6 text-lg font-bold text-slate-900">
+                            {tool.title}
+                          </h3>
+
+                          <p className="mt-2 text-sm leading-6 text-slate-500">
+                            {tool.description}
+                          </p>
+
+                          <p className="mt-auto pt-6 text-sm font-bold text-blue-700">
+                            {tool.actionLabel} →
+                          </p>
+                        </button>
+                      ))}
+                    </div>
+                  );
+                })()}
+              </section>
+
+              {/* PROFILE PROMPT */}
+              <section className="relative overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50 p-6 sm:p-8">
+                <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="max-w-xl">
+                    <div className="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-800">
+                      CAREER DEVELOPMENT
+                    </div>
+
+                    <h2 className="mt-4 text-xl font-extrabold text-slate-900 sm:text-2xl">
+                      Make your professional profile stand out.
+                    </h2>
+
+                    <p className="mt-3 text-sm leading-7 text-slate-600">
+                      Help employers understand your strengths. Keep your
+                      skills, experience and portfolio information up to date.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => navigate("profile")}
+                    className="shrink-0 rounded-xl bg-blue-700 px-6 py-3.5 text-sm font-bold text-white shadow-md transition hover:-translate-y-0.5 hover:bg-blue-800"
+                  >
+                    Update My Profile →
+                  </button>
+                </div>
+              </section>
+            </div>
+          )}
+          {/* EMPLOYER OVERVIEW */}
+          {isEmployer && activePage === "dashboard" && (
+            <div className="space-y-8">
+              {/* WELCOME HERO */}
+              <section className="relative isolate overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-blue-950 to-blue-800 p-7 text-white shadow-xl sm:p-10 lg:p-12">
+                <div className="pointer-events-none absolute -right-16 -top-20 -z-10 h-72 w-72 rounded-full bg-blue-400/20 blur-3xl" />
+                <div className="pointer-events-none absolute -bottom-24 right-1/4 -z-10 h-64 w-64 rounded-full bg-indigo-400/20 blur-3xl" />
+
+                <div className="relative flex flex-col justify-between gap-8 lg:flex-row lg:items-center">
+                  <div className="max-w-2xl">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-blue-300/20 bg-white/10 px-3 py-1.5 text-xs font-semibold tracking-wide text-blue-200">
+                      <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                      EMPLOYER WORKSPACE
+                    </div>
+
+                    <h1 className="mt-6 text-3xl font-extrabold leading-tight tracking-tight sm:text-4xl lg:text-5xl">
+                      Welcome back, {firstName}!
+                    </h1>
+
+                    <p className="mt-4 max-w-xl text-sm leading-7 text-blue-100 sm:text-base">
+                      Your next great hire could be just around the corner.
+                      Manage your opportunities, review applicants and find the
+                      right talent to grow your organisation.
+                    </p>
+
+                    <div className="mt-8 flex flex-wrap gap-3">
+                      <button
+                        type="button"
+                        onClick={() => navigate("createOpportunity")}
+                        className="rounded-xl bg-white px-6 py-3.5 text-sm font-bold text-blue-900 shadow-lg transition hover:-translate-y-0.5 hover:bg-blue-50"
+                      >
+                        + Post an Opportunity
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => navigate("employerApplications")}
+                        className="rounded-xl border border-white/25 bg-white/10 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-white/20"
+                      >
+                        Review Applications →
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="hidden h-36 w-36 shrink-0 items-center justify-center rounded-3xl border border-white/15 bg-white/10 lg:flex">
+                    <span className="text-7xl">🏢</span>
+                  </div>
+                </div>
+              </section>
+
+              {/* RECRUITMENT ANALYTICS */}
+              <section>
+                <div className="mb-5">
+                  <p className="text-xs font-bold uppercase tracking-widest text-blue-700">
+                    RECRUITMENT OVERVIEW
+                  </p>
+                  <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-slate-900">
+                    Your Recruitment Analytics
+                  </h2>
+                  <p className="mt-2 text-sm text-slate-500">
+                    Monitor your recruitment activity and performance.
+                  </p>
+                </div>
+
+                <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+                  {[
+                    {
+                      title: "Active Opportunities",
+                      description: "Currently published opportunities",
+                      icon: "▤",
+                      color: "bg-blue-50 text-blue-700",
+                    },
+                    {
+                      title: "Total Applications",
+                      description: "Applications received",
+                      icon: "▣",
+                      color: "bg-violet-50 text-violet-700",
+                    },
+                    {
+                      title: "Job Post Views",
+                      description: "People viewing your opportunities",
+                      icon: "◉",
+                      color: "bg-emerald-50 text-emerald-700",
+                    },
+                    {
+                      title: "Qualified Applicants",
+                      description: "Applicants matching your requirements",
+                      icon: "✧",
+                      color: "bg-amber-50 text-amber-700",
+                    },
+                  ].map((item) => (
+                    <div
+                      key={item.title}
+                      className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div
+                          className={`flex h-12 w-12 items-center justify-center rounded-xl text-2xl ${item.color}`}
+                        >
+                          {item.icon}
+                        </div>
+
+                        <span className="text-xs font-semibold text-slate-400">
+                          Analytics
+                        </span>
+                      </div>
+
+                      <p className="mt-5 text-3xl font-extrabold text-slate-900">
+                        —
+                      </p>
+
+                      <h3 className="mt-2 text-sm font-bold text-slate-800">
+                        {item.title}
+                      </h3>
+
+                      <p className="mt-1 text-xs leading-5 text-slate-500">
+                        {item.description}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+
+                <p className="mt-3 text-xs text-slate-400">
+                  Recruitment statistics will appear here when analytics are
+                  connected.
+                </p>
+              </section>
+
+              {/* RECRUITMENT WORKSPACE */}
+              <section>
+                <div className="mb-5">
+                  <p className="text-xs font-bold uppercase tracking-widest text-blue-700">
+                    MANAGE YOUR BUSINESS
+                  </p>
+                  <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-slate-900">
+                    Recruitment Workspace
+                  </h2>
+                  <p className="mt-2 text-sm text-slate-500">
+                    Everything you need to manage your hiring process.
+                  </p>
+                </div>
+
+                <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+                  {[
+                    {
+                      title: "Post an Opportunity",
+                      description:
+                        "Create and publish job openings or internships to attract talented applicants.",
+                      action: "createOpportunity",
+                      button: "Create Opportunity",
+                      icon: "+",
+                      color: "bg-blue-50 text-blue-700",
+                    },
+                    {
+                      title: "My Opportunities",
+                      description:
+                        "View, edit, activate or manage the opportunities you've published.",
+                      action: "myOpportunities",
+                      button: "Manage Opportunities",
+                      icon: "▤",
+                      color: "bg-violet-50 text-violet-700",
+                    },
+                    {
+                      title: "Manage Applications",
+                      description:
+                        "Review candidates, assess applications and update recruitment decisions.",
+                      action: "employerApplications",
+                      button: "Review Applicants",
+                      icon: "▣",
+                      color: "bg-emerald-50 text-emerald-700",
+                    },
+                  ].map((item) => (
+                    <div
+                      key={item.action}
+                      className="group flex min-h-64 flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl hover:shadow-blue-900/5"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div
+                          className={`flex h-12 w-12 items-center justify-center rounded-2xl text-2xl ${item.color}`}
+                        >
+                          {item.icon}
+                        </div>
+
+                        <span className="text-lg text-slate-300 transition group-hover:translate-x-1 group-hover:text-blue-700">
+                          →
+                        </span>
+                      </div>
+
+                      <h3 className="mt-6 text-lg font-bold text-slate-900">
+                        {item.title}
+                      </h3>
+
+                      <p className="mt-2 text-sm leading-6 text-slate-500">
+                        {item.description}
+                      </p>
+
+                      <button
+                        type="button"
+                        onClick={() => navigate(item.action)}
+                        className="mt-auto self-start rounded-xl bg-blue-700 px-5 py-3 text-sm font-bold text-white transition hover:bg-blue-800"
+                      >
+                        {item.button} →
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              {/* HIRING TIP */}
+              <section className="rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50 p-6 sm:p-8">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="max-w-xl">
+                    <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-800">
+                      HIRING INSIGHT
+                    </span>
+
+                    <h2 className="mt-4 text-xl font-extrabold text-slate-900">
+                      Find the right talent for your organisation.
+                    </h2>
+
+                    <p className="mt-3 text-sm leading-7 text-slate-600">
+                      Keep your opportunity descriptions clear and your
+                      eligibility requirements specific. This helps candidates
+                      understand your expectations before applying.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => navigate("myOpportunities")}
+                    className="shrink-0 rounded-xl border border-blue-200 bg-white px-6 py-3.5 text-sm font-bold text-blue-800 transition hover:bg-blue-100"
+                  >
+                    View My Opportunities →
+                  </button>
+                </div>
+              </section>
+            </div>
+          )}
+
+          {/* OTHER DASHBOARD PAGES */}
+          {activePage !== "dashboard" && (
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+              <button
+                type="button"
+                onClick={() => navigate("dashboard")}
+                className="mb-6 text-sm font-semibold text-blue-700 hover:text-blue-900"
+              >
+                ← Back to Overview
+              </button>
+
+              {renderPage()}
+            </div>
+          )}
+        </div>
       </section>
     </main>
   );
