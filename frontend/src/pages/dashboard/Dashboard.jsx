@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import ApplicantProfile from "../../components/applicant/ApplicantProfile";
 import CreateOpportunity from "../CreateOpportunity";
 import Opportunities from "../Opportunities";
@@ -8,8 +8,101 @@ import MyApplications from "../MyApplications";
 import EmployerApplications from "../EmployerApplications";
 import JobMatches from "../JobMatches";
 
-export default function Dashboard({ user, onLogout }) {
+export default function Dashboard({ user, onLogout, onUserUpdate }) {
   const isEmployer = user?.role === "EMPLOYER";
+
+  const fileInputRef = useRef(null);
+  const [uploadingPicture, setUploadingPicture] = useState(false);
+  const [pictureMessage, setPictureMessage] = useState("");
+
+  const [analytics, setAnalytics] = useState(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [analyticsError, setAnalyticsError] = useState("");
+
+  useEffect(() => {
+    if (!isEmployer) return;
+
+    async function fetchAnalytics() {
+      setAnalyticsLoading(true);
+      setAnalyticsError("");
+
+      try {
+        const accessToken = localStorage.getItem("accessToken");
+
+        const response = await fetch(
+          "http://127.0.0.1:8000/api/applications/employer/analytics/",
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          },
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.detail || "Could not load recruitment analytics.",
+          );
+        }
+
+        setAnalytics(data);
+      } catch (error) {
+        setAnalyticsError(error.message);
+      } finally {
+        setAnalyticsLoading(false);
+      }
+    }
+
+    fetchAnalytics();
+  }, [isEmployer]);
+
+  async function handlePictureChange(event) {
+    const file = event.target.files?.[0];
+
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setPictureMessage("Please select a valid image.");
+      return;
+    }
+
+    setUploadingPicture(true);
+    setPictureMessage("");
+
+    try {
+      const formData = new FormData();
+      formData.append("profile_picture", file);
+
+      const accessToken = localStorage.getItem("accessToken");
+
+      const response = await fetch("http://127.0.0.1:8000/api/me/", {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: formData,
+      });
+
+      const updatedUser = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          updatedUser.profile_picture?.[0] ||
+            updatedUser.detail ||
+            "Could not upload your profile picture.",
+        );
+      }
+
+      onUserUpdate?.(updatedUser);
+      setPictureMessage("Profile picture updated successfully.");
+    } catch (error) {
+      setPictureMessage(error.message);
+    } finally {
+      setUploadingPicture(false);
+      event.target.value = "";
+    }
+  }
 
   const [activePage, setActivePage] = useState(
     sessionStorage.getItem("dashboardPage") || "dashboard",
@@ -106,6 +199,13 @@ export default function Dashboard({ user, onLogout }) {
   return (
     <main className="min-h-screen bg-slate-50 lg:flex">
       {/* SIDEBAR */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handlePictureChange}
+        className="hidden"
+      />
       <aside className="flex w-full flex-col border-r border-slate-200 bg-white lg:fixed lg:inset-y-0 lg:w-64">
         <div className="flex items-center justify-between border-b border-slate-100 px-6 py-6">
           <h1 className="text-2xl font-extrabold tracking-tight text-blue-700">
@@ -114,9 +214,23 @@ export default function Dashboard({ user, onLogout }) {
         </div>
 
         <div className="flex items-center gap-3 border-b border-slate-100 px-6 py-5">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-blue-100 text-lg font-bold text-blue-700">
-            {firstName.charAt(0).toUpperCase()}
-          </div>
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploadingPicture}
+            title="Change profile picture"
+            className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-100 text-lg font-bold text-blue-700"
+          >
+            {user?.profile_picture ? (
+              <img
+                src={user.profile_picture}
+                alt="Profile"
+                className="h-full w-full rounded-full object-cover"
+              />
+            ) : (
+              firstName.charAt(0).toUpperCase()
+            )}
+          </button>
 
           <div className="min-w-0">
             <p className="truncate text-sm font-bold text-slate-900">
@@ -436,24 +550,28 @@ export default function Dashboard({ user, onLogout }) {
                     {
                       title: "Active Opportunities",
                       description: "Currently published opportunities",
+                      value: analytics?.active_opportunities ?? 0,
                       icon: "▤",
                       color: "bg-blue-50 text-blue-700",
                     },
                     {
                       title: "Total Applications",
                       description: "Applications received",
+                      value: analytics?.total_applications ?? 0,
                       icon: "▣",
                       color: "bg-violet-50 text-violet-700",
                     },
                     {
                       title: "Job Post Views",
                       description: "People viewing your opportunities",
+                      value: analytics?.total_views ?? 0,
                       icon: "◉",
                       color: "bg-emerald-50 text-emerald-700",
                     },
                     {
-                      title: "Qualified Applicants",
-                      description: "Applicants matching your requirements",
+                      title: "Reviewed Applications",
+                      description: "Applications with an updated status",
+                      value: analytics?.reviewed_applications ?? 0,
                       icon: "✧",
                       color: "bg-amber-50 text-amber-700",
                     },
@@ -475,7 +593,7 @@ export default function Dashboard({ user, onLogout }) {
                       </div>
 
                       <p className="mt-5 text-3xl font-extrabold text-slate-900">
-                        —
+                        {analyticsLoading ? "..." : item.value}
                       </p>
 
                       <h3 className="mt-2 text-sm font-bold text-slate-800">
@@ -489,10 +607,15 @@ export default function Dashboard({ user, onLogout }) {
                   ))}
                 </div>
 
-                <p className="mt-3 text-xs text-slate-400">
-                  Recruitment statistics will appear here when analytics are
-                  connected.
-                </p>
+                {analyticsError && (
+                  <p className="mt-3 text-sm text-red-600">{analyticsError}</p>
+                )}
+
+                {analyticsLoading && (
+                  <p className="mt-3 text-sm text-slate-500">
+                    Loading recruitment analytics...
+                  </p>
+                )}
               </section>
 
               {/* RECRUITMENT WORKSPACE */}

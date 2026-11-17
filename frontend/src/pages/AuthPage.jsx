@@ -169,7 +169,9 @@ export default function AuthPage() {
       }
     }
 
-    return <Dashboard user={user} onLogout={handleLogout} />;
+    return (
+      <Dashboard user={user} onLogout={handleLogout} onUserUpdate={setUser} />
+    );
   }
 
   return (

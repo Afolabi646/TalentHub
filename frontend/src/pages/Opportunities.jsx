@@ -144,6 +144,25 @@ function Opportunities() {
     }
   };
 
+  const handleViewOpportunity = async (opportunity) => {
+    setSelectedOpportunity(opportunity);
+    setApplicationMessage("");
+
+    try {
+      const token = localStorage.getItem("accessToken");
+
+      await fetch(
+        `http://127.0.0.1:8000/api/opportunities/${opportunity.id}/view/`,
+        {
+          method: "POST",
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        },
+      );
+    } catch (error) {
+      console.error("Could not record opportunity view:", error);
+    }
+  };
+
   const handleApply = async () => {
     const accessToken = localStorage.getItem("accessToken");
 
@@ -788,10 +807,7 @@ function Opportunities() {
 
                     <button
                       type="button"
-                      onClick={() => {
-                        setSelectedOpportunity(opportunity);
-                        setApplicationMessage("");
-                      }}
+                      onClick={() => handleViewOpportunity(opportunity)}
                       className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#142747] px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-900 focus:outline-none focus:ring-4 focus:ring-blue-100"
                     >
                       View Details

@@ -11,6 +11,7 @@ from .views import (
     ReactivateOpportunityView,
     JobMatchesView,
     DeleteOpportunityView,
+    RecordOpportunityView,
 )
 
 urlpatterns = [
@@ -67,5 +68,10 @@ path(
         "matches/",
         JobMatchesView.as_view(),
         name="job-matches",
+    ),
+    path(
+        "<int:opportunity_id>/view/",
+        RecordOpportunityView.as_view(),
+        name="record-opportunity-view",
     ),
 ]

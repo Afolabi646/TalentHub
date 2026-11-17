@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.exceptions import PermissionDenied
 from django.db.models import Q
 
-from .models import Opportunity, SavedOpportunity
+from .models import Opportunity, SavedOpportunity, OpportunityView
 from .serializers import (
     OpportunitySerializer,
     SavedOpportunitySerializer,
@@ -277,3 +277,41 @@ class JobMatchesView(APIView):
         )
 
         return Response(serializer.data)
+
+
+class RecordOpportunityView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request, opportunity_id):
+        try:
+            opportunity = Opportunity.objects.get(
+                id=opportunity_id,
+                is_active=True
+            )
+        except Opportunity.DoesNotExist:
+            return Response(
+                {"error": "Opportunity not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Do not count an employer viewing their own opportunity.
+        if (
+            request.user.is_authenticated
+            and request.user == opportunity.employer
+        ):
+            return Response(
+                {"message": "Employer self-view not recorded."},
+                status=status.HTTP_200_OK
+            )
+
+        viewer = request.user if request.user.is_authenticated else None
+
+        OpportunityView.objects.create(
+            opportunity=opportunity,
+            viewer=viewer
+        )
+
+        return Response(
+            {"message": "Opportunity view recorded successfully."},
+            status=status.HTTP_201_CREATED
+        )

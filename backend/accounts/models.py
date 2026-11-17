@@ -19,6 +19,12 @@ class User(AbstractUser):
 
     is_employer_approved = models.BooleanField(default=False)
 
+    profile_picture = models.ImageField(
+    upload_to="profile_pictures/",
+    blank=True,
+    null=True
+)
+
 
 class ApplicantProfile(models.Model):
     user = models.OneToOneField(
