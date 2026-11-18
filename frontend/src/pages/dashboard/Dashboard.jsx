@@ -7,6 +7,34 @@ import MyOpportunities from "../MyOpportunities";
 import MyApplications from "../MyApplications";
 import EmployerApplications from "../EmployerApplications";
 import JobMatches from "../JobMatches";
+import {
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  LabelList,
+} from "recharts";
+
+
+const STATUS_COLORS = {
+  PENDING: "#F59E0B",
+  REVIEWING: "#3B82F6",
+  ACCEPTED: "#10B981",
+  REJECTED: "#EF4444",
+};
+
+const STATUS_LABELS = {
+  PENDING: "Pending",
+  REVIEWING: "Reviewing",
+  ACCEPTED: "Accepted",
+  REJECTED: "Rejected",
+};
 
 export default function Dashboard({ user, onLogout, onUserUpdate }) {
   const isEmployer = user?.role === "EMPLOYER";
@@ -121,6 +149,26 @@ export default function Dashboard({ user, onLogout, onUserUpdate }) {
 
   const fullName =
     `${user?.first_name || ""} ${user?.last_name || ""}`.trim() || "User";
+
+    const statusData = ["PENDING", "REVIEWING", "ACCEPTED", "REJECTED"].map(
+      (status) => {
+        const application = analytics?.application_statuses?.find(
+          (item) => item.status === status,
+        );
+
+        return {
+          status,
+          name: STATUS_LABELS[status],
+          count: application?.count ?? 0,
+          color: STATUS_COLORS[status],
+        };
+      },
+    );
+
+    const totalStatusApplications = statusData.reduce(
+      (total, item) => total + item.count,
+      0,
+    );
 
   const navigate = (page) => {
     sessionStorage.setItem("dashboardPage", page);
@@ -607,6 +655,98 @@ export default function Dashboard({ user, onLogout, onUserUpdate }) {
                   ))}
                 </div>
 
+                {/* APPLICATION STATUS CHART */}
+                <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                  <div className="mb-6">
+                    <h3 className="text-lg font-bold text-slate-900">
+                      Application Status
+                    </h3>
+                    <p className="mt-1 text-sm text-slate-500">
+                      Overview of applications across different recruitment
+                      stages.
+                    </p>
+                  </div>
+
+                  {analyticsLoading ? (
+                    <p className="py-12 text-center text-sm text-slate-500">
+                      Loading application statistics...
+                    </p>
+                  ) : analytics && totalStatusApplications > 0 ? (
+                    <div className="flex flex-col items-center gap-6 sm:flex-row sm:justify-around">
+                      {/* DOUGHNUT CHART */}
+                      <div className="relative h-64 w-full max-w-64">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={statusData}
+                              dataKey="count"
+                              nameKey="name"
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={65}
+                              outerRadius={95}
+                              paddingAngle={3}
+                              stroke="none"
+                            >
+                              {statusData.map((item) => (
+                                <Cell key={item.status} fill={item.color} />
+                              ))}
+                            </Pie>
+
+                            <Tooltip
+                              formatter={(value, name) => [value, name]}
+                            />
+                          </PieChart>
+                        </ResponsiveContainer>
+
+                        {/* CHART CENTER */}
+                        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+                          <span className="text-3xl font-extrabold text-slate-900">
+                            {totalStatusApplications}
+                          </span>
+                          <span className="text-xs font-medium text-slate-500">
+                            Total Applications
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* STATUS NUMBERS */}
+                      <div className="w-full max-w-xs space-y-5">
+                        {statusData.map((item) => (
+                          <div
+                            key={item.status}
+                            className="flex items-center justify-between gap-4"
+                          >
+                            <div className="flex items-center gap-3">
+                              <span
+                                className="h-3 w-3 rounded-full"
+                                style={{ backgroundColor: item.color }}
+                              />
+                              <span className="text-sm font-medium text-slate-600">
+                                {item.name}
+                              </span>
+                            </div>
+
+                            <span className="text-lg font-bold text-slate-900">
+                              {item.count}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="py-12 text-center">
+                      <p className="text-sm font-semibold text-slate-700">
+                        No applications yet
+                      </p>
+                      <p className="mt-2 text-sm text-slate-500">
+                        Application statistics will appear here when candidates
+                        apply.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
                 {analyticsError && (
                   <p className="mt-3 text-sm text-red-600">{analyticsError}</p>
                 )}
@@ -615,6 +755,89 @@ export default function Dashboard({ user, onLogout, onUserUpdate }) {
                   <p className="mt-3 text-sm text-slate-500">
                     Loading recruitment analytics...
                   </p>
+                )}
+              </section>
+
+              {/* OPPORTUNITY VIEWS CHART */}
+              <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div className="mb-6">
+                  <h3 className="text-lg font-bold text-slate-900">
+                    Opportunity Performance
+                  </h3>
+                  <p className="mt-1 text-sm text-slate-500">
+                    See how many people are viewing each of your opportunities.
+                  </p>
+                </div>
+
+                {analyticsLoading ? (
+                  <p className="py-12 text-center text-sm text-slate-500">
+                    Loading opportunity views...
+                  </p>
+                ) : analytics?.views_by_opportunity?.length > 0 ? (
+                  <div className="h-80 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={analytics.views_by_opportunity}
+                        layout="vertical"
+                        margin={{ top: 5, right: 25, left: 10, bottom: 5 }}
+                      >
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          horizontal={false}
+                          stroke="#E2E8F0"
+                        />
+
+                        <XAxis
+                          type="number"
+                          allowDecimals={false}
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fill: "#64748B", fontSize: 12 }}
+                        />
+
+                        <YAxis
+                          type="category"
+                          dataKey="title"
+                          width={140}
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fill: "#475569", fontSize: 12 }}
+                        />
+
+                        <Tooltip
+                          formatter={(value) => [
+                            `${value} views`,
+                            "Total Views",
+                          ]}
+                          cursor={{ fill: "#EFF6FF" }}
+                        />
+
+                        <Bar
+                          dataKey="views_count"
+                          fill="#2563EB"
+                          radius={[0, 6, 6, 0]}
+                          barSize={28}
+                        >
+                          <LabelList
+                            dataKey="views_count"
+                            position="right"
+                            fill="#334155"
+                            fontSize={13}
+                            fontWeight={600}
+                          />
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <div className="py-12 text-center">
+                    <p className="text-sm font-semibold text-slate-700">
+                      No opportunity views yet
+                    </p>
+                    <p className="mt-2 text-sm text-slate-500">
+                      Views will appear here as people visit your opportunities.
+                    </p>
+                  </div>
                 )}
               </section>
 
