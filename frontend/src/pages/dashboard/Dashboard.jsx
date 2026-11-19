@@ -213,7 +213,7 @@ export default function Dashboard({ user, onLogout, onUserUpdate }) {
     }
 
     if (activePage === "jobMatches" && !isEmployer) {
-      return <JobMatches />;
+      return <JobMatches user={user} />;
     }
 
     if (activePage === "myApplications" && !isEmployer) {

@@ -11,7 +11,7 @@ from .serializers import (
     SavedOpportunitySerializer,
     JobMatchSerializer,
 )
-from .matching import calculate_match_score
+from .matching import calculate_skill_match
 from django.core.exceptions import ObjectDoesNotExist
 
 
@@ -252,7 +252,10 @@ class JobMatchesView(APIView):
         matches = []
 
         for opportunity in opportunities:
-            score = calculate_match_score(profile, opportunity)
+            skill_result = calculate_skill_match(
+                profile,
+                opportunity
+            )
 
             matches.append({
                 "id": opportunity.id,
@@ -261,9 +264,13 @@ class JobMatchesView(APIView):
                 "category": opportunity.category,
                 "location": opportunity.location,
                 "deadline": opportunity.deadline,
+                "application_link": opportunity.application_link,
                 "description": opportunity.description,
                 "eligibility": opportunity.eligibility,
-                "match_score": score,
+                "required_skills": opportunity.required_skills,
+                "match_score": skill_result["match_score"],
+                "matched_skills": skill_result["matched_skills"],
+                "missing_skills": skill_result["missing_skills"],
             })
 
         matches.sort(

@@ -25,6 +25,11 @@ class Opportunity(models.Model):
     application_link = models.URLField(blank=True)
     description = models.TextField()
     eligibility = models.TextField(blank=True)
+
+    required_skills = models.TextField(
+    blank=True,
+    help_text="Enter required skills separated by commas."
+)
     how_to_apply = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)

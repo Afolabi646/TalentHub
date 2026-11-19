@@ -14,6 +14,7 @@ class OpportunitySerializer(serializers.ModelSerializer):
             "deadline",
             "application_link",
             "description",
+            "required_skills",
             "eligibility",
             "how_to_apply",
             "is_active",
@@ -37,16 +38,30 @@ class SavedOpportunitySerializer(serializers.ModelSerializer):
 class JobMatchSerializer(serializers.ModelSerializer):
     match_score = serializers.FloatField(read_only=True)
 
+    matched_skills = serializers.ListField(
+        child=serializers.CharField(),
+        read_only=True
+    )
+
+    missing_skills = serializers.ListField(
+        child=serializers.CharField(),
+        read_only=True
+    )
+
     class Meta:
         model = Opportunity
         fields = [
-            "id",
-            "title",
-            "organization",
-            "category",
-            "location",
-            "deadline",
-            "description",
-            "eligibility",
-            "match_score",
-        ]
+    "id",
+    "title",
+    "organization",
+    "category",
+    "location",
+    "deadline",
+    "application_link",
+    "description",
+    "eligibility",
+    "required_skills",
+    "match_score",
+    "matched_skills",
+    "missing_skills",
+]

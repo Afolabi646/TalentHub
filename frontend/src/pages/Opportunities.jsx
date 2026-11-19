@@ -163,6 +163,54 @@ function Opportunities() {
     }
   };
 
+  // Verify the user's actual account before opening an external application.
+  const handleExternalApply = async (applicationLink) => {
+    const accessToken = localStorage.getItem("accessToken");
+
+    if (!accessToken) {
+      alert("Please log in to your account before applying.");
+      window.location.href = "/auth";
+      return;
+    }
+
+    // Open a blank tab immediately to avoid the browser blocking the popup.
+    const newTab = window.open("about:blank", "_blank");
+
+    if (!newTab) {
+      alert("Please allow pop-ups in your browser to continue.");
+      return;
+    }
+
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/me/", {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        newTab.close();
+        alert("Your login session has expired. Please log in again.");
+        window.location.href = "/auth";
+        return;
+      }
+
+      const user = await response.json();
+
+      if (user.role !== "APPLICANT") {
+        newTab.close();
+        alert("Only applicant accounts can apply for opportunities.");
+        return;
+      }
+
+      newTab.location.href = applicationLink;
+    } catch (error) {
+      newTab.close();
+      console.error("Could not verify your account:", error);
+      alert("Unable to verify your account. Please try again.");
+    }
+  };
+
   const handleApply = async () => {
     const accessToken = localStorage.getItem("accessToken");
 
@@ -398,15 +446,16 @@ function Opportunities() {
               </div>
 
               {opportunity.application_link ? (
-                <a
-                  href={opportunity.application_link}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleExternalApply(opportunity.application_link)
+                  }
                   className={`${buttonStyle} mt-5 w-full`}
                 >
                   Apply on External Website
                   <ExternalLink className="h-4 w-4" />
-                </a>
+                </button>
               ) : (
                 <p className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm leading-6 text-amber-800">
                   An external application link has not been provided yet.

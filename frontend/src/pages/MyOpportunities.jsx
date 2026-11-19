@@ -10,15 +10,19 @@ import {
   RotateCcw,
   X,
   Save,
-  Plus,
   ClipboardList,
-  Clock3,
   CheckCircle2,
   AlertCircle,
   ExternalLink,
+  ArrowUpRight,
+  Layers3,
+  Clock3,
 } from "lucide-react";
 
 const API_URL = "http://127.0.0.1:8000/api/opportunities/";
+
+const inputClass =
+  "w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-50";
 
 export default function MyOpportunities() {
   const [opportunities, setOpportunities] = useState([]);
@@ -146,7 +150,9 @@ export default function MyOpportunities() {
           Object.entries(data)
             .map(
               ([field, errors]) =>
-                `${field}: ${Array.isArray(errors) ? errors.join(", ") : errors}`,
+                `${field}: ${
+                  Array.isArray(errors) ? errors.join(", ") : errors
+                }`,
             )
             .join(" ");
 
@@ -232,8 +238,8 @@ export default function MyOpportunities() {
 
   if (loading) {
     return (
-      <div className="flex min-h-[350px] flex-col items-center justify-center gap-3">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-100 border-t-blue-600" />
+      <div className="flex min-h-[400px] flex-col items-center justify-center gap-4">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-100 border-t-blue-700" />
         <p className="text-sm font-medium text-slate-500">
           Loading your opportunities...
         </p>
@@ -243,157 +249,193 @@ export default function MyOpportunities() {
 
   if (error && opportunities.length === 0) {
     return (
-      <div className="rounded-2xl border border-red-100 bg-red-50 p-6">
-        <AlertCircle className="mb-3 h-7 w-7 text-red-600" />
-        <h3 className="font-semibold text-red-800">
-          Unable to load opportunities
-        </h3>
-        <p className="mt-1 text-sm text-red-700">{error}</p>
+      <div className="rounded-2xl border border-red-100 bg-red-50 p-7">
+        <AlertCircle className="mb-3 h-8 w-8 text-red-600" />
+        <h3 className="font-bold text-red-900">Unable to load opportunities</h3>
+        <p className="mt-2 text-sm text-red-700">{error}</p>
       </div>
     );
   }
 
+  const stats = [
+    {
+      title: "Total Opportunities",
+      value: opportunities.length,
+      description: "All your job and internship postings",
+      icon: BriefcaseBusiness,
+      iconStyle: "bg-blue-50 text-blue-700",
+      accent: "border-l-blue-600",
+    },
+    {
+      title: "Active Postings",
+      value: activeCount,
+      description: "Currently published opportunities",
+      icon: CheckCircle2,
+      iconStyle: "bg-emerald-50 text-emerald-700",
+      accent: "border-l-emerald-500",
+    },
+    {
+      title: "Inactive Postings",
+      value: inactiveCount,
+      description: "Paused or unpublished opportunities",
+      icon: Power,
+      iconStyle: "bg-amber-50 text-amber-700",
+      accent: "border-l-amber-500",
+    },
+  ];
+
   return (
-    <div className="space-y-7">
+    <div className="space-y-8">
       {/* PAGE HEADER */}
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <div>
-          <div className="mb-2 flex items-center gap-2 text-sm font-medium text-blue-700">
-            <BriefcaseBusiness size={16} />
-            Recruitment Management
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-blue-950 to-blue-800 p-6 text-white shadow-lg sm:p-9">
+        <div className="pointer-events-none absolute -right-16 -top-24 h-72 w-72 rounded-full border-[35px] border-white/5" />
+        <div className="pointer-events-none absolute -bottom-32 right-32 h-64 w-64 rounded-full bg-blue-400/10 blur-3xl" />
+
+        <div className="relative z-10 flex flex-col justify-between gap-6 sm:flex-row sm:items-center">
+          <div className="max-w-xl">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold text-blue-100">
+              <BriefcaseBusiness size={14} />
+              RECRUITMENT MANAGEMENT
+            </div>
+
+            <h2 className="text-2xl font-bold tracking-tight sm:text-3xl lg:text-4xl">
+              My Opportunities
+            </h2>
+
+            <p className="mt-3 max-w-lg text-sm leading-6 text-blue-100/80 sm:text-base">
+              Manage your job postings, monitor their publishing status and keep
+              your recruitment opportunities up to date.
+            </p>
           </div>
 
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-            My Opportunities
-          </h2>
-
-          <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">
-            Manage your job postings, keep opportunities updated and control
-            their publishing status.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2 self-start rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-600 shadow-sm sm:self-auto">
-          <ClipboardList size={18} className="text-blue-600" />
-          {opportunities.length} Total Postings
-        </div>
-      </div>
-
-      {/* SUMMARY CARDS */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-slate-500">
-              Total Opportunities
-            </p>
-            <div className="rounded-xl bg-blue-50 p-2.5 text-blue-700">
-              <BriefcaseBusiness size={20} />
+          <div className="flex w-fit items-center gap-3 rounded-2xl border border-white/15 bg-white/10 px-5 py-4 backdrop-blur-sm">
+            <div className="rounded-xl bg-white/10 p-2.5">
+              <ClipboardList size={23} />
+            </div>
+            <div>
+              <p className="text-2xl font-bold tabular-nums">
+                {opportunities.length}
+              </p>
+              <p className="text-xs font-medium text-blue-100">
+                Total Postings
+              </p>
             </div>
           </div>
-          <h3 className="mt-4 text-3xl font-bold text-slate-900">
-            {opportunities.length}
-          </h3>
-          <p className="mt-1 text-xs text-slate-500">
-            All your job and internship postings
-          </p>
         </div>
+      </section>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-slate-500">
-              Active Postings
-            </p>
-            <div className="rounded-xl bg-emerald-50 p-2.5 text-emerald-700">
-              <CheckCircle2 size={20} />
-            </div>
-          </div>
-          <h3 className="mt-4 text-3xl font-bold text-slate-900">
-            {activeCount}
-          </h3>
-          <p className="mt-1 text-xs text-slate-500">
-            Currently published opportunities
-          </p>
-        </div>
+      {/* STATISTICS */}
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {stats.map((stat) => {
+          const Icon = stat.icon;
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-slate-500">
-              Inactive Postings
-            </p>
-            <div className="rounded-xl bg-amber-50 p-2.5 text-amber-700">
-              <Power size={20} />
+          return (
+            <div
+              key={stat.title}
+              className={`rounded-2xl border border-slate-200 border-l-4 ${stat.accent} bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-md sm:p-6`}
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm font-medium text-slate-500">
+                    {stat.title}
+                  </p>
+
+                  <h3 className="mt-4 text-3xl font-bold tracking-tight text-slate-900">
+                    {stat.value}
+                  </h3>
+                </div>
+
+                <div className={`rounded-xl p-3 ${stat.iconStyle}`}>
+                  <Icon size={22} />
+                </div>
+              </div>
+
+              <p className="mt-3 text-xs leading-5 text-slate-500">
+                {stat.description}
+              </p>
             </div>
-          </div>
-          <h3 className="mt-4 text-3xl font-bold text-slate-900">
-            {inactiveCount}
-          </h3>
-          <p className="mt-1 text-xs text-slate-500">
-            Paused or unpublished opportunities
-          </p>
-        </div>
-      </div>
+          );
+        })}
+      </section>
 
       {/* FEEDBACK MESSAGES */}
       {message && (
-        <div className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+        <div className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-800">
           <CheckCircle2 size={19} className="mt-0.5 shrink-0" />
-          {message}
+          <p>{message}</p>
         </div>
       )}
 
       {error && (
-        <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
           <AlertCircle size={19} className="mt-0.5 shrink-0" />
-          {error}
+          <p>{error}</p>
         </div>
       )}
 
-      {/* OPPORTUNITIES LIST */}
-      <div>
-        <div className="mb-4 flex items-center justify-between gap-3">
+      {/* OPPORTUNITY LIST SECTION */}
+      <section>
+        <div className="mb-5 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
           <div>
-            <h3 className="text-lg font-bold text-slate-900">
+            <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-blue-700">
+              <Layers3 size={16} />
+              YOUR RECRUITMENT
+            </div>
+
+            <h3 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
               Your Job Postings
             </h3>
-            <p className="mt-1 text-sm text-slate-500">
-              View and manage all your published opportunities.
+
+            <p className="mt-1.5 text-sm text-slate-500">
+              Review and manage all your job and internship opportunities.
             </p>
+          </div>
+
+          <div className="inline-flex w-fit items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-xs font-semibold text-slate-600">
+            <span className="h-2 w-2 rounded-full bg-blue-600" />
+            {opportunities.length}{" "}
+            {opportunities.length === 1 ? "Opportunity" : "Opportunities"}
           </div>
         </div>
 
+        {/* EMPTY STATE */}
         {opportunities.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
-              <BriefcaseBusiness size={30} />
+          <div className="rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center shadow-sm">
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-blue-50 text-blue-700">
+              <BriefcaseBusiness size={34} />
             </div>
 
-            <h3 className="mt-5 text-lg font-bold text-slate-900">
+            <h3 className="mt-6 text-xl font-bold text-slate-900">
               No opportunities yet
             </h3>
 
-            <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-slate-500">
+            <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
               You haven't posted any jobs or internships. Create your first
-              opportunity to start attracting applicants.
+              opportunity to start attracting qualified applicants.
             </p>
           </div>
         ) : (
-          <div className="space-y-4">
+          /* OPPORTUNITY CARDS */
+          <div className="space-y-5">
             {opportunities.map((opportunity) => (
-              <div
+              <article
                 key={opportunity.id}
-                className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:border-blue-200 hover:shadow-md"
+                className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition duration-200 hover:border-blue-200 hover:shadow-lg"
               >
                 {editingId === opportunity.id ? (
                   /* EDIT FORM */
-                  <form onSubmit={saveChanges} className="p-5 sm:p-7">
-                    <div className="mb-6 flex items-center justify-between gap-3 border-b border-slate-100 pb-5">
+                  <form onSubmit={saveChanges} className="p-5 sm:p-8">
+                    <div className="mb-7 flex items-center justify-between gap-3 border-b border-slate-100 pb-5">
                       <div>
-                        <p className="text-sm font-medium text-blue-700">
+                        <div className="mb-1 text-xs font-bold uppercase tracking-wider text-blue-700">
                           Opportunity Management
-                        </p>
-                        <h3 className="mt-1 text-xl font-bold text-slate-900">
+                        </div>
+                        <h3 className="text-xl font-bold text-slate-900">
                           Edit Opportunity
                         </h3>
+                        <p className="mt-1 text-sm text-slate-500">
+                          Update your posting information below.
+                        </p>
                       </div>
 
                       <button
@@ -402,10 +444,10 @@ export default function MyOpportunities() {
                           setEditingId(null);
                           setError("");
                         }}
-                        className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
+                        className="rounded-xl border border-slate-200 p-2.5 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
                         aria-label="Close editing form"
                       >
-                        <X size={21} />
+                        <X size={20} />
                       </button>
                     </div>
 
@@ -419,7 +461,8 @@ export default function MyOpportunities() {
                           value={form.title}
                           onChange={handleChange}
                           required
-                          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-50"
+                          className={inputClass}
+                          placeholder="e.g. Frontend Developer"
                         />
                       </div>
 
@@ -432,7 +475,8 @@ export default function MyOpportunities() {
                           value={form.organization}
                           onChange={handleChange}
                           required
-                          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-50"
+                          className={inputClass}
+                          placeholder="Organization name"
                         />
                       </div>
 
@@ -444,7 +488,7 @@ export default function MyOpportunities() {
                           name="category"
                           value={form.category}
                           onChange={handleChange}
-                          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-50"
+                          className={inputClass}
                         >
                           <option value="JOB">Job</option>
                           <option value="INTERNSHIP">Internship</option>
@@ -459,7 +503,8 @@ export default function MyOpportunities() {
                           name="location"
                           value={form.location}
                           onChange={handleChange}
-                          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-50"
+                          className={inputClass}
+                          placeholder="e.g. Lagos / Remote"
                         />
                       </div>
 
@@ -472,7 +517,7 @@ export default function MyOpportunities() {
                           name="deadline"
                           value={form.deadline}
                           onChange={handleChange}
-                          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-50"
+                          className={inputClass}
                         />
                       </div>
 
@@ -485,7 +530,8 @@ export default function MyOpportunities() {
                           name="application_link"
                           value={form.application_link}
                           onChange={handleChange}
-                          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-50"
+                          className={inputClass}
+                          placeholder="https://example.com/apply"
                         />
                       </div>
 
@@ -499,7 +545,8 @@ export default function MyOpportunities() {
                           onChange={handleChange}
                           rows={5}
                           required
-                          className="w-full resize-y rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-50"
+                          className={inputClass}
+                          placeholder="Describe the opportunity..."
                         />
                       </div>
 
@@ -512,7 +559,8 @@ export default function MyOpportunities() {
                           value={form.eligibility}
                           onChange={handleChange}
                           rows={3}
-                          className="w-full resize-y rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-50"
+                          className={inputClass}
+                          placeholder="Who is eligible to apply?"
                         />
                       </div>
 
@@ -525,19 +573,20 @@ export default function MyOpportunities() {
                           value={form.how_to_apply}
                           onChange={handleChange}
                           rows={3}
-                          className="w-full resize-y rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-50"
+                          className={inputClass}
+                          placeholder="Explain the application process..."
                         />
                       </div>
                     </div>
 
-                    <div className="mt-7 flex flex-wrap gap-3 border-t border-slate-100 pt-5">
+                    <div className="mt-8 flex flex-col-reverse gap-3 border-t border-slate-100 pt-6 sm:flex-row">
                       <button
                         type="submit"
                         disabled={saving}
-                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-700 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-700 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         <Save size={17} />
-                        {saving ? "Saving..." : "Save Changes"}
+                        {saving ? "Saving Changes..." : "Save Changes"}
                       </button>
 
                       <button
@@ -546,7 +595,7 @@ export default function MyOpportunities() {
                           setEditingId(null);
                           setError("");
                         }}
-                        className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+                        className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-6 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
                       >
                         <X size={17} />
                         Cancel
@@ -554,39 +603,49 @@ export default function MyOpportunities() {
                     </div>
                   </form>
                 ) : (
-                  /* OPPORTUNITY CARD */
-                  <div className="p-5 sm:p-6">
-                    <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
-                      <div className="flex gap-4">
-                        <div className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700 sm:flex">
-                          <BriefcaseBusiness size={23} />
+                  /* OPPORTUNITY DISPLAY CARD */
+                  <div className="p-5 sm:p-7">
+                    <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-start">
+                      <div className="flex min-w-0 gap-4">
+                        <div className="hidden h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-100 text-blue-700 sm:flex">
+                          <BriefcaseBusiness size={25} />
                         </div>
 
                         <div className="min-w-0">
-                          <div className="mb-2 flex flex-wrap items-center gap-2">
+                          <div className="mb-3 flex flex-wrap items-center gap-2">
                             <span
-                              className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold ${
                                 opportunity.is_active
                                   ? "bg-emerald-50 text-emerald-700"
                                   : "bg-slate-100 text-slate-600"
                               }`}
                             >
+                              <span
+                                className={`h-1.5 w-1.5 rounded-full ${
+                                  opportunity.is_active
+                                    ? "bg-emerald-500"
+                                    : "bg-slate-400"
+                                }`}
+                              />
                               {opportunity.is_active ? "Active" : "Inactive"}
                             </span>
 
-                            <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+                            <span className="rounded-full bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700">
                               {opportunity.category === "INTERNSHIP"
                                 ? "Internship"
                                 : "Job"}
                             </span>
                           </div>
 
-                          <h3 className="break-words text-lg font-bold text-slate-900 sm:text-xl">
+                          <h3 className="break-words text-lg font-bold tracking-tight text-slate-900 sm:text-xl">
                             {opportunity.title}
                           </h3>
 
-                          <p className="mt-1 flex items-center gap-2 text-sm font-medium text-slate-600">
-                            <Building2 size={15} className="shrink-0" />
+                          <p className="mt-2 flex items-center gap-2 text-sm font-medium text-slate-600">
+                            <Building2
+                              size={16}
+                              className="shrink-0 text-slate-400"
+                            />
                             {opportunity.organization}
                           </p>
                         </div>
@@ -595,33 +654,49 @@ export default function MyOpportunities() {
                       <button
                         type="button"
                         onClick={() => startEditing(opportunity)}
-                        className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                        className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
                       >
                         <Pencil size={16} />
-                        Edit
+                        Edit Posting
                       </button>
                     </div>
 
-                    <div className="mt-5 flex flex-wrap gap-x-6 gap-y-3 border-t border-slate-100 pt-4 text-sm text-slate-500">
-                      <span className="flex items-center gap-2">
-                        <MapPin size={16} className="text-slate-400" />
-                        {opportunity.location || "Remote"}
-                      </span>
+                    {/* OPPORTUNITY DETAILS */}
+                    <div className="mt-6 grid grid-cols-1 gap-3 border-t border-slate-100 pt-5 sm:grid-cols-2">
+                      <div className="flex items-center gap-3 rounded-xl bg-slate-50 px-4 py-3">
+                        <div className="rounded-lg bg-white p-2 text-slate-500 shadow-sm">
+                          <MapPin size={17} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs text-slate-400">Location</p>
+                          <p className="truncate text-sm font-semibold text-slate-700">
+                            {opportunity.location || "Remote"}
+                          </p>
+                        </div>
+                      </div>
 
-                      <span className="flex items-center gap-2">
-                        <CalendarDays size={16} className="text-slate-400" />
-                        {opportunity.deadline
-                          ? `Deadline: ${opportunity.deadline}`
-                          : "No deadline specified"}
-                      </span>
+                      <div className="flex items-center gap-3 rounded-xl bg-slate-50 px-4 py-3">
+                        <div className="rounded-lg bg-white p-2 text-slate-500 shadow-sm">
+                          <CalendarDays size={17} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs text-slate-400">
+                            Application deadline
+                          </p>
+                          <p className="truncate text-sm font-semibold text-slate-700">
+                            {opportunity.deadline || "No deadline specified"}
+                          </p>
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="mt-5 flex flex-wrap gap-2 border-t border-slate-100 pt-4">
+                    {/* ACTIONS */}
+                    <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-5">
                       {opportunity.is_active ? (
                         <button
                           type="button"
                           onClick={() => deactivateOpportunity(opportunity.id)}
-                          className="inline-flex items-center gap-2 rounded-lg border border-red-100 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-700 transition hover:bg-red-100"
+                          className="inline-flex items-center gap-2 rounded-xl border border-red-100 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-700 transition hover:bg-red-100"
                         >
                           <Power size={16} />
                           Deactivate
@@ -633,7 +708,7 @@ export default function MyOpportunities() {
                             onClick={() =>
                               reactivateOpportunity(opportunity.id)
                             }
-                            className="inline-flex items-center gap-2 rounded-lg border border-emerald-100 bg-emerald-50 px-4 py-2.5 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100"
+                            className="inline-flex items-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-2.5 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100"
                           >
                             <RotateCcw size={16} />
                             Reactivate
@@ -642,7 +717,7 @@ export default function MyOpportunities() {
                           <button
                             type="button"
                             onClick={() => deleteOpportunity(opportunity.id)}
-                            className="inline-flex items-center gap-2 rounded-lg border border-red-100 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-700 transition hover:bg-red-100"
+                            className="inline-flex items-center gap-2 rounded-xl border border-red-100 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-700 transition hover:bg-red-100"
                           >
                             <Trash2 size={16} />
                             Delete
@@ -655,20 +730,20 @@ export default function MyOpportunities() {
                           href={opportunity.application_link}
                           target="_blank"
                           rel="noreferrer"
-                          className="ml-auto inline-flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-blue-700 transition hover:bg-blue-50"
+                          className="inline-flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-blue-700 transition hover:bg-blue-50 sm:ml-auto"
                         >
-                          View application link
-                          <ExternalLink size={15} />
+                          View Application Link
+                          <ArrowUpRight size={16} />
                         </a>
                       )}
                     </div>
                   </div>
                 )}
-              </div>
+              </article>
             ))}
           </div>
         )}
-      </div>
+      </section>
     </div>
   );
 }

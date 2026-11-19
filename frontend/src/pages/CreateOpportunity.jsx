@@ -25,6 +25,7 @@ export default function CreateOpportunity({ onBack, onCreated }) {
     deadline: "",
     application_link: "",
     description: "",
+    required_skills: "",
     eligibility: "",
     how_to_apply: "",
   });
@@ -98,6 +99,7 @@ export default function CreateOpportunity({ onBack, onCreated }) {
         deadline: "",
         application_link: "",
         description: "",
+        required_skills: "",
         eligibility: "",
         how_to_apply: "",
       });
@@ -339,6 +341,23 @@ export default function CreateOpportunity({ onBack, onCreated }) {
                   rows={3}
                   placeholder="Describe the qualifications or requirements for applicants..."
                 />
+              </div>
+
+              <div>
+                <label className={labelClass}>Required Skills</label>
+                <textarea
+                  className={`${inputClass} resize-y`}
+                  name="required_skills"
+                  value={formData.required_skills}
+                  onChange={handleChange}
+                  rows={3}
+                  placeholder="e.g. Python, Django, REST API, PostgreSQL"
+                />
+                <p className="mt-2 text-xs text-slate-500">
+                  Enter the specific skills applicants need, separated by
+                  commas. These skills will be used to calculate applicant skill
+                  matches.
+                </p>
               </div>
             </div>
           </section>
